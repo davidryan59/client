@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Btn } from '../Components/Btn';
 import { EmSpacer, Link, Spacer } from '../Components/CoreUI';
 import { EmailCTA, EmailCTAMode } from '../Components/Email';
-import { HideSmall, Sub, Text, White } from '../Components/Text';
+import { Blue, Green, HideSmall, Sub, Text, White } from '../Components/Text';
 import LandingPageCanvas from '../Renderers/LandingPageCanvas';
 import dfstyles from '../Styles/dfstyles';
 import { LandingPageRoundArt } from '../Views/LandingPageRoundArt';
@@ -45,8 +45,32 @@ export default function LandingPage() {
               <br />
               <Text>zkSNARK space warfare</Text>
               <br />
-              <Text>Round 4: Society Eggnog - Lightning Round</Text>
+              <Text>dfdao Learn to Play Round</Text>
             </p>
+
+            {
+              process.env.DEV_RPC_URL ?
+              <div>
+                <Spacer height={16} />
+
+                <p>
+                <Text>Click <Blue>Approve Blockchain</Blue>
+                <br/>
+                Then click Continue on the new tab that will pop up</Text>
+                </p>
+
+                <Btn
+                style={{ borderRadius: '8px', padding: '4px 8px' }}
+                color={dfstyles.colors.dfblue}
+                onClick={() => {
+                  window.open(process.env.DEV_RPC_URL);
+                }}
+              >
+                Approve Blockchain
+              </Btn>
+              </div>
+              : null
+            }
 
             <Spacer height={16} />
 
@@ -63,7 +87,7 @@ export default function LandingPage() {
 
           <EmSpacer height={3} />
 
-          <div style={{ color: dfstyles.colors.text }}>
+          {/* <div style={{ color: dfstyles.colors.text }}>
             <HallOfFameTitle>Space Masters</HallOfFameTitle>
             <Spacer height={8} />
             <table>
@@ -163,13 +187,13 @@ export default function LandingPage() {
                 </TRow>
               </tbody>
             </table>
-          </div>
+          </div> */}
 
           <Spacer height={32} />
 
-          <EmailWrapper>
+          {/* <EmailWrapper>
             <EmailCTA mode={EmailCTAMode.SUBSCRIBE} />
-          </EmailWrapper>
+          </EmailWrapper> */}
 
           <Spacer height={16} />
 

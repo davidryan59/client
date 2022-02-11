@@ -2,6 +2,7 @@ import { BLOCK_EXPLORER_URL } from '@darkforest_eth/constants';
 import { WHITELIST_CONTRACT_ADDRESS } from '@darkforest_eth/contracts';
 import { EthConnection, neverResolves, weiToEth } from '@darkforest_eth/network';
 import { address } from '@darkforest_eth/serde';
+import { EthAddress } from '@darkforest_eth/types';
 import { utils, Wallet } from 'ethers';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -74,10 +75,12 @@ export function GameLandingPage() {
 
   useEffect(() => {
     getEthConnection()
-      .then((ethConnection) => setEthConnection(ethConnection))
+      .then((ethConnection) => {
+        setEthConnection(ethConnection);
+      })
       .catch((e) => {
-        alert('error connecting to blockchain');
-        console.log(e);
+        alert(`error connecting to blockchain. To hopefully fix this, click the blue Approve Blockchain button here ${window.location}, then refresh this page.`);
+        console.log(e)
       });
   }, []);
 
@@ -282,6 +285,20 @@ export function GameLandingPage() {
     [ethConnection]
   );
 
+  const drinkFaucet = async (newAddr: EthAddress) => {
+    const providerUrl = ethConnection?.getRpcEndpoint();
+    if(!process.env.FAUCET_URL || !providerUrl) return;
+    const url = `${process.env.FAUCET_URL}?address=${newAddr}&rpc=${providerUrl}`;
+    console.log('url', url);
+    try {
+      const response = await fetch(url);
+      console.log('fetch response', response)
+    } catch (error) {
+      console.log('fetch error', error)
+    }
+    return;
+  }
+
   const advanceStateFromGenerateAccount = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       const newWallet = Wallet.createRandom();
@@ -373,12 +390,17 @@ export function GameLandingPage() {
           terminal.current?.println('Player whitelisted.');
           terminal.current?.println('');
           terminal.current?.println(`Welcome, player ${address}.`);
+          console.log("FAUCET_URL", process.env.FAUCET_URL);
           // TODO: Provide own env variable for this feature
-          if (!isProd) {
+          if (process.env.FAUCET_URL) {
             // in development, automatically get some ether from faucet
-            const balance = weiToEth(await ethConnection?.loadBalance(address));
-            if (balance === 0) {
-              await requestDevFaucet(address);
+            var balance = weiToEth(await ethConnection?.loadBalance(address));
+            if(balance < 1 ){
+              terminal.current?.print(`Requesting fake ETH from the faucet...`);
+              await drinkFaucet(address);
+              balance = weiToEth(await ethConnection?.loadBalance(address));
+              terminal.current?.println(`Account balance is now ${balance}!`);
+              terminal.current?.println(``);
             }
           }
           setStep(TerminalPromptStep.FETCHING_ETH_DATA);
