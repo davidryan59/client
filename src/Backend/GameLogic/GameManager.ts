@@ -110,6 +110,7 @@ import {
   disconnectTwitter,
   getAllTwitters,
   verifyTwitterHandle,
+  WEBSERVER_URL,
 } from '../Network/UtilityServerAPI';
 import { SerializedPlugin } from '../Plugins/SerializedPlugin';
 import { ProcgenUtils } from '../Procedural/ProcgenUtils';
@@ -510,7 +511,9 @@ class GameManager extends EventEmitter {
 
   private async refreshNetworkHealth() {
     try {
-      this.networkHealth$.publish(await loadNetworkHealth());
+      if(WEBSERVER_URL) {
+        this.networkHealth$.publish(await loadNetworkHealth());
+      }
     } catch (e) {
       // @todo - what do we do if we can't connect to the webserver
     }

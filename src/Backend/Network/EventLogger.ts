@@ -11,13 +11,15 @@ export class EventLogger {
   }
 
   logEvent(eventType: EventType, event: unknown) {
-    fetch(`${WEBSERVER_URL}/event`, {
-      method: 'POST',
-      body: JSON.stringify(EventLogger.augmentEvent(event, eventType)),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch((err) => console.log(err));
+    if(WEBSERVER_URL) {
+      fetch(`${WEBSERVER_URL}/event`, {
+        method: 'POST',
+        body: JSON.stringify(EventLogger.augmentEvent(event, eventType)),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch((err) => console.log(err));
+    }
   }
 }
 

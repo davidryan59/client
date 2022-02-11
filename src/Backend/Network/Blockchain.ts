@@ -112,6 +112,8 @@ export function getEthConnection(): Promise<EthConnection> {
   } else {
     url = 'http://localhost:8545';
   }
-
+  if(process.env.DEV_RPC_URL) {
+    url = process.env.DEV_RPC_URL;
+  }
   return createEthConnection(url);
 }
