@@ -1,5 +1,9 @@
 const path = require('path');
 
+const dotenv = require('dotenv');
+
+dotenv.config();
+
 const { EnvironmentPlugin } = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
@@ -98,9 +102,9 @@ module.exports = {
     new EnvironmentPlugin({
       NODE_ENV: 'development',
       DEFAULT_RPC: 'https://rpc-df.xdaichain.com/',
-      CONVERSATION_API_HOST: isProd ? 'https://api.zkga.me' : 'http://localhost:3000',
-      LEADERBOARD_API: isProd ? 'https://api.zkga.me' : 'http://localhost:3000',
-      WEBSERVER_URL: isProd ? 'https://api.zkga.me' : 'http://localhost:3000',
+      WEBSERVER_URL: null,
+      DEV_RPC_URL: null,
+      FAUCET_URL: null
     }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
