@@ -79,7 +79,7 @@ export function GameLandingPage() {
         setEthConnection(ethConnection);
       })
       .catch((e) => {
-        alert(`error connecting to blockchain. To hopefully fix this, click the blue Approve Blockchain button here ${window.location}, then refresh this page.`);
+        alert(`error connecting to blockchain. Make sure you have mixed content enabled and refresh this page.`);
         console.log(e)
       });
   }, []);

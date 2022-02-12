@@ -94,7 +94,7 @@ export class ViewportEntities {
       }
     }
 
-    this.gameManager.refreshServerPlanetStates(planetIds);
+    // this.gameManager.refreshServerPlanetStates(planetIds);
   }
 
   private recalculateViewportPlanets(viewport: Viewport) {

@@ -2504,7 +2504,7 @@ class GameManager extends EventEmitter {
       });
     }
 
-    await this.refreshServerPlanetStates([locationId]);
+    // await this.refreshServerPlanetStates([locationId]);
   }
 
   public async submitDisconnectTwitter(twitter: string) {
@@ -2552,7 +2552,7 @@ class GameManager extends EventEmitter {
       });
     }
 
-    await this.refreshServerPlanetStates([locationId]);
+    // await this.refreshServerPlanetStates([locationId]);
   }
 
   /**
