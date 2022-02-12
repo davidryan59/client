@@ -87,7 +87,7 @@ export default function LandingPage() {
 
           <EmSpacer height={3} />
 
-          {/* <div style={{ color: dfstyles.colors.text }}>
+          <div style={{ color: dfstyles.colors.text }}>
             <HallOfFameTitle>Space Masters</HallOfFameTitle>
             <Spacer height={8} />
             <table>
@@ -187,7 +187,7 @@ export default function LandingPage() {
                 </TRow>
               </tbody>
             </table>
-          </div> */}
+          </div>
 
           <Spacer height={32} />
 
@@ -226,7 +226,7 @@ export default function LandingPage() {
 
         <Spacer height={128} />
 
-        <LeadboardDisplay />
+        {/* <LeadboardDisplay /> */}
 
         <Spacer height={256} />
       </Page>
