@@ -1,3 +1,4 @@
+// @ts-nocheck p-timeout
 import {
   EthAddress,
   RegisterResponse,
