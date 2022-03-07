@@ -403,6 +403,7 @@ export class ContractsAPI extends EventEmitter {
     } = await this.makeCall(this.contract.getSnarkConstants);
     const {
       ADMIN_CAN_ADD_PLANETS,
+      MANUAL_SPAWN,
       WORLD_RADIUS_LOCKED,
       WORLD_RADIUS_MIN,
       MAX_NATURAL_PLANET_LEVEL,
@@ -464,6 +465,7 @@ export class ContractsAPI extends EventEmitter {
 
     const constants: ContractConstants = {
       ADMIN_CAN_ADD_PLANETS,
+      MANUAL_SPAWN,
       WORLD_RADIUS_LOCKED,
       WORLD_RADIUS_MIN: WORLD_RADIUS_MIN.toNumber(),
 

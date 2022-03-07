@@ -89,6 +89,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             // TODO: Figure out if we should expose this from contract
             START_PAUSED: false,
             ADMIN_CAN_ADD_PLANETS: config.ADMIN_CAN_ADD_PLANETS,
+            MANUAL_SPAWN: config.MANUAL_SPAWN,
             WORLD_RADIUS_LOCKED: config.WORLD_RADIUS_LOCKED,
             WORLD_RADIUS_MIN: config.WORLD_RADIUS_MIN,
             DISABLE_ZK_CHECKS: config.DISABLE_ZK_CHECKS,
@@ -141,6 +142,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             CAPTURE_ZONE_RADIUS: config.CAPTURE_ZONE_RADIUS,
             CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED: config.CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED,
             CAPTURE_ZONES_PER_5000_WORLD_RADIUS: config.CAPTURE_ZONES_PER_5000_WORLD_RADIUS,
+
           });
         })
         .catch((e) => {
