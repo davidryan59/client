@@ -170,6 +170,7 @@ export type PlanetTypeWeightsBySpaceType = [
 
 export interface ContractConstants {
   ADMIN_CAN_ADD_PLANETS: boolean;
+  MANUAL_SPAWN: boolean;
   WORLD_RADIUS_LOCKED: boolean;
   WORLD_RADIUS_MIN: number;
 
