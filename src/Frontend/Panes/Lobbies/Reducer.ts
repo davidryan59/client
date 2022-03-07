@@ -779,7 +779,7 @@ export function lobbyConfigInit(startingConfig: LobbyInitializers) {
       }
       default: {
         // https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking
-        const _exhaustive: never = key;
+        const _exhaustive = key;
         // Just ignore any values that we don't know about
         break;
       }
