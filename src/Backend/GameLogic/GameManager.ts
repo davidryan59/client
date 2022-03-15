@@ -154,6 +154,7 @@ export enum GameManagerEvent {
   InitializedPlayerError = 'InitializedPlayerError',
   ArtifactUpdate = 'ArtifactUpdate',
   Moved = 'Moved',
+  Gameover = 'Gameover'
 }
 
 class GameManager extends EventEmitter {
@@ -843,7 +844,17 @@ class GameManager extends EventEmitter {
       .on(ContractsAPIEvent.RadiusUpdated, async () => {
         const newRadius = await gameManager.contractsAPI.getWorldRadius();
         gameManager.setRadius(newRadius);
-      });
+      })
+      .on(ContractsAPIEvent.PlanetClaimed, async (player: string, planetId: LocationId) => {
+        await gameManager.hardRefreshPlanet(planetId);
+        // await gameManager.setCountdown(gameManager.contractConstants.TARGET_PLANET_HOLD_BLOCKS_REQUIRED);
+      })
+      .on(ContractsAPIEvent.Gameover, async (winner: string) => {
+        // await gameManager.setGameover();
+        gameManager.emit(GameManagerEvent.Gameover);
+
+      })
+      ;
 
     const unconfirmedTxs = await persistentChunkStore.getUnconfirmedSubmittedEthTxs();
     const confirmationQueue = new ThrottledConcurrentQueue({

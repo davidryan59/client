@@ -59,6 +59,8 @@ export const enum ContractEvent {
   AdminGiveSpaceship = 'AdminGiveSpaceship',
   PauseStateChanged = 'PauseStateChanged',
   LobbyCreated = 'LobbyCreated',
+  TargetPlanetInvaded = 'TargetPlanetInvaded',
+  Gameover = 'Gameover'
 }
 
 export const enum ContractsAPIEvent {
@@ -106,6 +108,7 @@ export const enum ContractsAPIEvent {
   PlanetTransferred = 'PlanetTransferred',
   PlanetClaimed = 'PlanetClaimed',
   LobbyCreated = 'LobbyCreated',
+  Gameover = "Gameover"
 }
 
 // planet locationID(BigInt), branch number
@@ -171,6 +174,7 @@ export type PlanetTypeWeightsBySpaceType = [
 export interface ContractConstants {
   ADMIN_CAN_ADD_PLANETS: boolean;
   MANUAL_SPAWN: boolean;
+  TARGET_PLANETS: boolean;
   WORLD_RADIUS_LOCKED: boolean;
   WORLD_RADIUS_MIN: number;
 

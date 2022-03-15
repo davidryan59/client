@@ -212,13 +212,14 @@ export class ContractsAPI extends EventEmitter {
           contract.filters.PlanetProspected(null, null).topics,
           contract.filters.PlanetSilverWithdrawn(null, null, null).topics,
           contract.filters.PlanetTransferred(null, null, null).topics,
-          contract.filters.PlanetInvaded(null, null).topics,
           contract.filters.PlanetCaptured(null, null).topics,
           contract.filters.PlayerInitialized(null, null).topics,
           contract.filters.AdminOwnershipChanged(null, null).topics,
           contract.filters.AdminGiveSpaceship(null, null).topics,
           contract.filters.PauseStateChanged(null).topics,
           contract.filters.LobbyCreated(null, null).topics,
+          contract.filters.TargetPlanetInvaded(null, null).topics,
+          contract.filters.Gameover(null).topics
         ].map((topicsOrUndefined) => (topicsOrUndefined || [])[0]),
       ] as Array<string | Array<string>>,
     };
@@ -325,9 +326,6 @@ export class ContractsAPI extends EventEmitter {
       ) => {
         this.emit(ContractsAPIEvent.PlanetUpdate, locationIdFromEthersBN(location));
       },
-      [ContractEvent.PlanetInvaded]: async (_playerAddr: string, location: EthersBN, _: Event) => {
-        this.emit(ContractsAPIEvent.PlanetUpdate, locationIdFromEthersBN(location));
-      },
       [ContractEvent.PlanetCaptured]: async (_playerAddr: string, location: EthersBN, _: Event) => {
         this.emit(ContractsAPIEvent.PlanetUpdate, locationIdFromEthersBN(location));
       },
@@ -363,6 +361,12 @@ export class ContractsAPI extends EventEmitter {
       [ContractEvent.LobbyCreated]: (ownerAddr: string, lobbyAddr: string) => {
         this.emit(ContractsAPIEvent.LobbyCreated, address(ownerAddr), address(lobbyAddr));
       },
+      [ContractEvent.TargetPlanetInvaded]: (player: string, location: EthersBN) => {
+        this.emit(ContractsAPIEvent.PlanetClaimed, player, locationIdFromEthersBN(location));
+      },
+      [ContractEvent.Gameover]: (player: string) => {
+        this.emit(ContractsAPIEvent.Gameover, address(player));
+      }
     };
 
     this.ethConnection.subscribeToContractEvents(contract, eventHandlers, filter);
@@ -385,6 +389,11 @@ export class ContractsAPI extends EventEmitter {
     contract.removeAllListeners(ContractEvent.PlanetSilverWithdrawn);
     contract.removeAllListeners(ContractEvent.PlanetInvaded);
     contract.removeAllListeners(ContractEvent.PlanetCaptured);
+    contract.removeAllListeners(ContractEvent.LobbyCreated);
+    contract.removeAllListeners(ContractEvent.TargetPlanetInvaded);
+    contract.removeAllListeners(ContractEvent.Gameover);
+
+
   }
 
   public getContractAddress(): EthAddress {
@@ -403,7 +412,6 @@ export class ContractsAPI extends EventEmitter {
     } = await this.makeCall(this.contract.getSnarkConstants);
     const {
       ADMIN_CAN_ADD_PLANETS,
-      MANUAL_SPAWN,
       WORLD_RADIUS_LOCKED,
       WORLD_RADIUS_MIN,
       MAX_NATURAL_PLANET_LEVEL,
@@ -437,8 +445,13 @@ export class ContractsAPI extends EventEmitter {
       CAPTURE_ZONE_PLANET_LEVEL_SCORE,
       CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED,
       CAPTURE_ZONES_PER_5000_WORLD_RADIUS,
-      TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
     } = await this.makeCall(this.contract.getGameConstants);
+
+    const {
+      MANUAL_SPAWN,
+      TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
+      TARGET_PLANETS
+    } = await this.makeCall(this.contract.getArenaConstants);
 
     const TOKEN_MINT_END_SECONDS = (
       await this.makeCall(this.contract.TOKEN_MINT_END_TIMESTAMP)
@@ -466,7 +479,6 @@ export class ContractsAPI extends EventEmitter {
 
     const constants: ContractConstants = {
       ADMIN_CAN_ADD_PLANETS,
-      MANUAL_SPAWN,
       WORLD_RADIUS_LOCKED,
       WORLD_RADIUS_MIN: WORLD_RADIUS_MIN.toNumber(),
 
@@ -561,8 +573,10 @@ export class ContractsAPI extends EventEmitter {
       ],
       CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED: CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED.toNumber(),
       CAPTURE_ZONES_PER_5000_WORLD_RADIUS: CAPTURE_ZONES_PER_5000_WORLD_RADIUS.toNumber(),
-      TARGET_PLANET_HOLD_BLOCKS_REQUIRED: TARGET_PLANET_HOLD_BLOCKS_REQUIRED.toNumber(),
 
+      TARGET_PLANETS: TARGET_PLANETS,
+      TARGET_PLANET_HOLD_BLOCKS_REQUIRED: TARGET_PLANET_HOLD_BLOCKS_REQUIRED.toNumber(),
+      MANUAL_SPAWN: MANUAL_SPAWN
     };
 
     return constants;
