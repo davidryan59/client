@@ -910,6 +910,8 @@ class GameManager extends EventEmitter {
     const artifactsOnPlanet = artifactsOnPlanets[0];
 
     const revealedCoords = await this.contractsAPI.getRevealedCoordsByIdIfExists(planetId);
+
+    const isTargetPlanet = planet.isTargetPlanet;
     let revealedLocation: RevealedLocation | undefined;
     let claimedCoords: ClaimedCoords | undefined;
 
@@ -925,7 +927,8 @@ class GameManager extends EventEmitter {
       arrivals,
       artifactsOnPlanet.map((a) => a.id),
       revealedLocation,
-      claimedCoords?.revealer
+      claimedCoords?.revealer,
+      isTargetPlanet
     );
 
     // it's important that we reload the artifacts that are on the planet after the move

@@ -59,6 +59,7 @@ export const enum ContractEvent {
   AdminGiveSpaceship = 'AdminGiveSpaceship',
   PauseStateChanged = 'PauseStateChanged',
   LobbyCreated = 'LobbyCreated',
+  AdminCreatePlanet = 'AdminCreatePlanet',
   TargetPlanetInvaded = 'TargetPlanetInvaded',
   Gameover = 'Gameover'
 }

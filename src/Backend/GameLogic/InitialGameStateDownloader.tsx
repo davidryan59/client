@@ -40,6 +40,11 @@ export interface InitialGameState {
   arrivals: Map<VoyageId, QueuedArrival>;
   twitters: AddressTwitterMap;
   paused: boolean;
+
+  gameover: boolean;
+  // countdown: number | undefined;
+  winners: string[];
+
 }
 
 export class InitialGameStateDownloader {
@@ -90,6 +95,7 @@ export class InitialGameStateDownloader {
 
     const arrivals: Map<VoyageId, QueuedArrival> = new Map();
     const planetVoyageIdMap: Map<LocationId, VoyageId[]> = new Map();
+
 
     const minedChunks = Array.from(await persistentChunkStore.allChunks());
     const minedPlanetIds = new Set(
@@ -173,6 +179,10 @@ export class InitialGameStateDownloader {
     const twitters = await tryGetAllTwitters();
     const paused = contractsAPI.getIsPaused();
 
+    const gameover = contractsAPI.getGameover();
+
+    const winners = contractsAPI.getWinners();
+
     const initialState: InitialGameState = {
       contractConstants: await contractConstants,
       players: await players,
@@ -191,6 +201,9 @@ export class InitialGameStateDownloader {
       arrivals,
       twitters,
       paused: await paused,
+      gameover : await gameover,
+      // countdown,
+      winners : await winners
     };
 
     return initialState;

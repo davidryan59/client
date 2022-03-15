@@ -465,7 +465,8 @@ export class GameObjects {
     updatedArrivals?: QueuedArrival[],
     updatedArtifactsOnPlanet?: ArtifactId[],
     revealedLocation?: RevealedLocation,
-    claimerEthAddress?: EthAddress // TODO: Remove this
+    claimerEthAddress?: EthAddress, // TODO: Remove this
+    isTargetPlanet?: boolean
   ): void {
     this.touchedPlanetIds.add(planet.locationId);
     // does not modify unconfirmed txs
@@ -490,9 +491,12 @@ export class GameObjects {
       planet.emojiZoopAnimation = emojiZoopAnimation;
       planet.emojiZoopOutAnimation = emojiZoopOutAnimation;
       planet.messages = messages;
-
       // Possibly non updated props
       planet.heldArtifactIds = localPlanet.heldArtifactIds;
+    }
+
+    if(isTargetPlanet) {
+      planet.isTargetPlanet = isTargetPlanet;
     }
     if (updatedArtifactsOnPlanet) {
       planet.heldArtifactIds = updatedArtifactsOnPlanet;
@@ -1353,6 +1357,7 @@ export class GameObjects {
 
     const biome = this.getBiome(location);
 
+    const isTargetPlanet = false;
     return {
       locationId: hex,
       perlin,
@@ -1405,6 +1410,8 @@ export class GameObjects {
 
       invader: EMPTY_ADDRESS,
       capturer: EMPTY_ADDRESS,
+
+      isTargetPlanet,
     };
   }
 
