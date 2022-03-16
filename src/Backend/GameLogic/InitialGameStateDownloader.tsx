@@ -115,11 +115,15 @@ export class InitialGameStateDownloader {
     const claimedCoordsMap = new Map<LocationId, ClaimedCoords>();
 
     const allTouchedPlanetIds = storedTouchedPlanetIds.concat(await loadedTouchedPlanetIds);
+    console.log(`allTouchedPlanetIds: ${allTouchedPlanetIds}`)
     const allRevealedCoords = storedRevealedCoords.concat(await loadedRevealedCoords);
+    
     const revealedCoordsMap = new Map<LocationId, RevealedCoords>();
     for (const revealedCoords of allRevealedCoords) {
       revealedCoordsMap.set(revealedCoords.hash, revealedCoords);
     }
+ 
+
 
     let planetsToLoad = allTouchedPlanetIds.filter(
       (id) => minedPlanetIds.has(id) || revealedCoordsMap.has(id) || claimedCoordsMap.has(id)
@@ -133,6 +137,7 @@ export class InitialGameStateDownloader {
       planetsToLoad.push(arrival.fromPlanet);
     }
     planetsToLoad = [...new Set(planetsToLoad)];
+    console.log(`planetsToLoad: ${JSON.stringify(planetsToLoad)}`)
 
     const touchedAndLocatedPlanets = await contractsAPI.bulkGetPlanets(
       planetsToLoad,

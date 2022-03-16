@@ -466,8 +466,10 @@ export class GameObjects {
     updatedArtifactsOnPlanet?: ArtifactId[],
     revealedLocation?: RevealedLocation,
     claimerEthAddress?: EthAddress, // TODO: Remove this
-    isTargetPlanet?: boolean
   ): void {
+
+    console.log(`replacing ${planet.locationId}, isTarget planet is ${planet.isTargetPlanet}`);
+
     this.touchedPlanetIds.add(planet.locationId);
     // does not modify unconfirmed txs
     // that is handled by onTxConfirm
@@ -495,9 +497,6 @@ export class GameObjects {
       planet.heldArtifactIds = localPlanet.heldArtifactIds;
     }
 
-    if(isTargetPlanet) {
-      planet.isTargetPlanet = isTargetPlanet;
-    }
     if (updatedArtifactsOnPlanet) {
       planet.heldArtifactIds = updatedArtifactsOnPlanet;
     }
