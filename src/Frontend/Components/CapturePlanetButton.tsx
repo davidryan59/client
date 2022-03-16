@@ -31,7 +31,6 @@ export function CapturePlanetButton({
   const gameManager = uiManager.getGameManager();
   const currentBlockNumber = useEmitterValue(uiManager.getEthConnection().blockNumber$, undefined);
   const owned = planetWrapper.value?.owner === account;
-  const isTargetPlanet = planetWrapper.value?.isTargetPlanet;
   const captureZoneGenerator = uiManager.getCaptureZoneGenerator();
 
   const canGiveScore = useMemo(() => {
@@ -46,19 +45,12 @@ export function CapturePlanetButton({
     return canGiveScore && owned && planet.capturer === EMPTY_ADDRESS;
   }, [owned, planetWrapper, canGiveScore]);
 
-  const shouldShowInvadeCaptureZone = useMemo(() => {
+  const shouldShowInvade = useMemo(() => {
     if (!planetWrapper.value) return false;
     const planet = planetWrapper.value;
     const inZone = captureZoneGenerator?.isInZone(planet.locationId);
 
     return owned && inZone && planet.invader === EMPTY_ADDRESS && planet.capturer === EMPTY_ADDRESS;
-  }, [owned, planetWrapper, captureZoneGenerator]);
-
-  const shouldShowInvadeTarget = useMemo(() => {
-    if (!planetWrapper.value) return false;
-    const planet = planetWrapper.value;
-
-    return owned && isTargetPlanet && planet.invader === EMPTY_ADDRESS && planet.capturer === EMPTY_ADDRESS;
   }, [owned, planetWrapper, captureZoneGenerator]);
 
   const planetHasEnoughEnergy = useMemo(() => {
@@ -84,11 +76,6 @@ export function CapturePlanetButton({
     gameManager.invadePlanet(planetWrapper.value.locationId);
   }, [gameManager, planetWrapper]);
 
-  const invadeTarget = useCallback(() => {
-    if (!planetWrapper.value) return;
-    gameManager.invadeTargetPlanet(planetWrapper.value.locationId);
-  }, [gameManager, planetWrapper]);
-
   const shouldShowCapture = useMemo(() => {
     if (!planetWrapper.value) return;
     const planet = planetWrapper.value;
@@ -96,14 +83,7 @@ export function CapturePlanetButton({
     return owned && planet.capturer === EMPTY_ADDRESS && planet.invader !== EMPTY_ADDRESS;
   }, [owned, planetWrapper]);
 
-  const shouldShowClaimVictoryCapture = useMemo(() => {
-    if (!planetWrapper.value) return;
-    const planet = planetWrapper.value;
-
-    return owned && planet.capturer === EMPTY_ADDRESS && planet.invader !== EMPTY_ADDRESS;
-  }, [owned, planetWrapper]);
-
-  const blocksLeftToCapture = useMemo(() => {
+  const blocksLeft = useMemo(() => {
     if (!planetWrapper.value || !currentBlockNumber) {
       return undefined;
     }
@@ -123,30 +103,9 @@ export function CapturePlanetButton({
     );
   }, [uiManager, planetWrapper, currentBlockNumber]);
 
-  const blocksLeftToClaimVictory = useMemo(() => {
-    if (!planetWrapper.value || !currentBlockNumber) {
-      return undefined;
-    }
-    const planet = planetWrapper.value;
-
-    if (!planet.invadeStartBlock) return undefined;
-    const holdBlocksRequired = uiManager
-      .getGameManager()
-      .getContractConstants().TARGET_PLANET_HOLD_BLOCKS_REQUIRED;
-
-    // it is possible that we have an outdated currentBlockNumber in this calculation
-    // this would result in an incorrect number of blocks required being shown
-    // only show a max of holdBlocksRequired instead
-    return Math.min(
-      planet.invadeStartBlock + holdBlocksRequired - currentBlockNumber,
-      holdBlocksRequired
-    );
-  }, [uiManager, planetWrapper, currentBlockNumber]);
-
-
   const capturable = useMemo(() => {
-    return blocksLeftToCapture !== undefined && blocksLeftToCapture <= 0 && planetHasEnoughEnergy;
-  }, [planetHasEnoughEnergy, blocksLeftToCapture]);
+    return blocksLeft !== undefined && blocksLeft <= 0 && planetHasEnoughEnergy;
+  }, [planetHasEnoughEnergy, blocksLeft]);
 
   const capturing = useMemo(
     () => planetWrapper.value?.transactions?.hasTransaction(isUnconfirmedCapturePlanetTx),
@@ -158,16 +117,11 @@ export function CapturePlanetButton({
     gameManager.capturePlanet(planetWrapper.value.locationId);
   }, [gameManager, planetWrapper]);
 
-  const claimVictory = useCallback(() => {
-    if (!planetWrapper.value) return;
-    gameManager.claimVictory(planetWrapper.value.locationId);
-  }, [gameManager, planetWrapper]);
-
   return (
     <StyledRow>
       {shouldShow && (
         <>
-          {shouldShowInvadeCaptureZone && !shouldShowInvadeTarget && (
+          {shouldShowInvade && (
             <MaybeShortcutButton
               className='button'
               size='stretch'
@@ -184,27 +138,6 @@ export function CapturePlanetButton({
                 extraContent={<>Invade this planet. </>}
               >
                 {invading ? <LoadingSpinner initialText={'Invading...'} /> : 'Invade'}
-              </TooltipTrigger>
-            </MaybeShortcutButton>
-          )}
-
-          {shouldShowInvadeTarget && (
-            <MaybeShortcutButton
-              className='button'
-              size='stretch'
-              active={invading}
-              disabled={!invadable || invading}
-              onClick={invadeTarget}
-              onShortcutPressed={invade}
-              shortcutKey={INVADE}
-              shortcutText={INVADE}
-            >
-              <TooltipTrigger
-                style={{ width: '100%', textAlign: 'center' }}
-                name={TooltipName.Empty}
-                extraContent={<>Invade this target planet. </>}
-              >
-                {invading ? <LoadingSpinner initialText={'Invading...'} /> : 'Invade Target'}
               </TooltipTrigger>
             </MaybeShortcutButton>
           )}
@@ -227,45 +160,9 @@ export function CapturePlanetButton({
                   <>
                     <Green>
                       Capture this planet for score!{' '}
-                      {!!blocksLeftToCapture && blocksLeftToCapture >= 0 && (
+                      {!!blocksLeft && blocksLeft >= 0 && (
                         <>
-                          You must wait <White>{blocksLeftToCapture}</White> blocks until you can capture
-                          this planet.
-                        </>
-                      )}
-                      {!planetHasEnoughEnergy && (
-                        <Red>The planet requires above 80% energy before you can capture it.</Red>
-                      )}
-                    </Green>
-                  </>
-                }
-              >
-                {capturing ? <LoadingSpinner initialText={'Capturing...'} /> : 'Capture!'}
-              </TooltipTrigger>
-            </ShortcutBtn>
-          )}
-
-          {shouldShowClaimVictoryCapture && (
-            <ShortcutBtn
-              className='button'
-              size='stretch'
-              active={capturing}
-              disabled={!capturable || capturing}
-              onClick={claimVictory}
-              onShortcutPressed={claimVictory}
-              shortcutKey={INVADE}
-              shortcutText={INVADE}
-            >
-              <TooltipTrigger
-                style={{ width: '100%', textAlign: 'center' }}
-                name={TooltipName.Empty}
-                extraContent={
-                  <>
-                    <Green>
-                      Capture this planet to win the game!{' '}
-                      {!!blocksLeftToCapture && blocksLeftToCapture >= 0 && (
-                        <>
-                          You must wait <White>{blocksLeftToCapture}</White> blocks until you can capture
+                          You must wait <White>{blocksLeft}</White> blocks until you can capture
                           this planet.
                         </>
                       )}

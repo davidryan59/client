@@ -379,7 +379,8 @@ class GameManager extends EventEmitter {
     useMockHash: boolean,
     artifacts: Map<ArtifactId, Artifact>,
     ethConnection: EthConnection,
-    paused: boolean
+    paused: boolean,
+    // countdownStart: number | undefined 
   ) {
     super();
 
@@ -861,7 +862,10 @@ class GameManager extends EventEmitter {
       })
       .on(ContractsAPIEvent.PlanetClaimed, async (player: string, planetId: LocationId) => {
         await gameManager.hardRefreshPlanet(planetId);
-        // await gameManager.setCountdown(gameManager.contractConstants.TARGET_PLANET_HOLD_BLOCKS_REQUIRED);
+        // const planet = gameManager.entityStore.getPlanetWithId(planetId);
+        // if(planet?.isTargetPlanet && !gameManager.countdown){
+        //     await gameManager.setCountdown(gameManager.contractConstants.TARGET_PLANET_HOLD_BLOCKS_REQUIRED);
+        // }
       })
       .on(ContractsAPIEvent.Gameover, async (winner: string) => {
         // await gameManager.setGameover();

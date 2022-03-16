@@ -1308,6 +1308,11 @@ class GameUIManager extends EventEmitter {
     return this.contractConstants.CAPTURE_ZONES_ENABLED;
   }
 
+  public get targetPlanetsEnabled(): boolean {
+    return this.contractConstants.TARGET_PLANETS;
+  }
+
+
   public potentialCaptureScore(planetLevel: number): number {
     return this.contractConstants.CAPTURE_ZONE_PLANET_LEVEL_SCORE[planetLevel];
   }
