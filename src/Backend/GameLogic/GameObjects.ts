@@ -468,8 +468,6 @@ export class GameObjects {
     claimerEthAddress?: EthAddress, // TODO: Remove this
   ): void {
 
-    console.log(`replacing ${planet.locationId}, isTarget planet is ${planet.isTargetPlanet}`);
-
     this.touchedPlanetIds.add(planet.locationId);
     // does not modify unconfirmed txs
     // that is handled by onTxConfirm
@@ -1357,6 +1355,8 @@ export class GameObjects {
     const biome = this.getBiome(location);
 
     const isTargetPlanet = false;
+    const isSpawnPlanet = false;
+
     return {
       locationId: hex,
       perlin,
@@ -1411,6 +1411,7 @@ export class GameObjects {
       capturer: EMPTY_ADDRESS,
 
       isTargetPlanet,
+      isSpawnPlanet
     };
   }
 

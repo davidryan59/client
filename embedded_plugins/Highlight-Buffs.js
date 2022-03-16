@@ -108,6 +108,7 @@ const periodMsHighlight2xDefense = 1543;
 const periodMsHighlight2xSpeed = 1657;
 const periodMsHighlight2xRange = 1753;
 const periodMsHighlightTarget = 1819;
+const periodMsHighlightSpawn = 1947;
 
 
 // Set up colours for each of the highlights. Use similar colours to asteroid colour for 2x buffs.
@@ -119,6 +120,7 @@ const colsHighlight2xRange = [225, 225, 80];
 const colsHighlightRip = [80, 200, 255];
 const colsHighlightArtifact = [255, 100, 100];
 const colsHighlightTarget = [212, 175, 155];
+const colsHighlightSpawn = [69, 175, 155];
 
 // Helper functions for filters
 const prospectExpired = (plugin, planet) => {
@@ -147,6 +149,10 @@ const filterRip = (plugin, planet) => distanceAndLevelInRange(plugin, planet) &&
 const filterTarget = (plugin, planet) => {
   console.log(`${planet.x}, ${planet.y} isTargetPlanet: ${planet.isTargetPlanet}`)
   return distanceAndLevelInRange(plugin, planet) && planet.isTargetPlanet;
+}
+const filterSpawn = (plugin, planet) => {
+  console.log(`${planet.x}, ${planet.y} isSpawnPlanet: ${planet.isSpawnPlanet}`)
+  return distanceAndLevelInRange(plugin, planet) && planet.isSpawnPlanet;
 }
 
 const filterArtifact = (plugin, planet) => {
@@ -396,7 +402,9 @@ class Plugin {
       planetsWith2xSpeed: {label: "Speed", filter: filter2xSpeed, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xSpeed, cols: colsHighlight2xSpeed},
       planetsWith2xEnergyGro: {label: "Energy Gro", filter: filter2xEnergyGro, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xEnergyGro, cols: colsHighlight2xEnergyGro},
       planetsWith2xRange: {label: "Range", filter: filter2xRange, array: [TOGGLE_OFF], periodMs: periodMsHighlight2xRange, cols: colsHighlight2xRange},
-      planetsWithTarget: {label: "Target", filter: filterTarget, array: [TOGGLE_OFF], periodMs: periodMsHighlightTarget, cols: colsHighlightTarget}
+      planetsWithTarget: {label: "Target", filter: filterTarget, array: [TOGGLE_OFF], periodMs: periodMsHighlightTarget, cols: colsHighlightTarget},
+      planetsWithSpawn: {label: "Spawn", filter: filterSpawn, array: [TOGGLE_OFF], periodMs: periodMsHighlightSpawn, cols: colsHighlightSpawn}
+
     };
     this.highlightList = Object.keys(this.highlightData);
     console.log(`Initialised ${PLUGIN_NAME} plugin:`);
