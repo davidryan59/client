@@ -80,7 +80,7 @@ export function TargetPlanetButton({
     );
   }, [uiManager, planetWrapper, currentBlockNumber]);
 
-  const claimable = useMemo(() => blocksLeftToClaimVictory !== undefined && blocksLeftToClaimVictory <= 0 && !planetWrapper.value?.capturer, [blocksLeftToClaimVictory]);
+  const claimable = useMemo(() => blocksLeftToClaimVictory !== undefined && blocksLeftToClaimVictory <= 0, [blocksLeftToClaimVictory]);
 
   const claimingVictory = useMemo(
     () => planetWrapper.value?.transactions?.hasTransaction(isUnconfirmedClaimVictoryTx),
@@ -137,7 +137,7 @@ export function TargetPlanetButton({
                       Capture this planet to win the game!{' '}
                       {!!blocksLeftToClaimVictory && blocksLeftToClaimVictory >= 0 && (
                         <>
-                          You must wait <White>{blocksLeftToClaimVictory}</White> blocks until you
+                          You must wait <White>{blocksLeftToClaimVictory}</White> blocks (~{blocksLeftToClaimVictory * 7} seconds) until you
                           can claim victory with this planet.
                         </>
                       )}

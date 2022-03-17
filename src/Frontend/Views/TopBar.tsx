@@ -232,7 +232,7 @@ export function TopBar({ twitterVerifyHook }: { twitterVerifyHook: Hook<boolean>
         )}
       </AlignCenterHorizontally>
       <NetworkHealth />
-      <Gameover winners = {uiManager.getWinners()}/>
+      <Gameover/>
       <Paused />
     </TopBarContainer>
   );
