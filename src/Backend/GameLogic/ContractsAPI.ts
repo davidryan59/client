@@ -677,17 +677,34 @@ export class ContractsAPI extends EventEmitter {
     startingAt: number,
     onProgress?: (fractionCompleted: number) => void
   ): Promise<LocationId[]> {
-    const nPlanets: number = (await this.makeCall<EthersBN>(this.contract.getNPlanets)).toNumber();
+    const nPlanets: number = (await this.makeCall<EthersBN>(this.contract.getNTargetPlanets)).toNumber();
 
     const planetIds = await aggregateBulkGetter<EthersBN>(
       nPlanets - startingAt,
       1000,
       async (start, end) =>
-        await this.makeCall(this.contract.bulkGetPlanetIds, [start + startingAt, end + startingAt]),
+        await this.makeCall(this.contract.bulkGetTargetPlanetIds, [start + startingAt, end + startingAt]),
       onProgress
     );
     return planetIds.map(locationIdFromEthersBN);
   }
+
+  public async getSpawnPlanetIds(
+    startingAt: number,
+    onProgress?: (fractionCompleted: number) => void
+  ): Promise<LocationId[]> {
+    const nPlanets: number = (await this.makeCall<EthersBN>(this.contract.getNSpawnPlanets)).toNumber();
+
+    const planetIds = await aggregateBulkGetter<EthersBN>(
+      nPlanets - startingAt,
+      1000,
+      async (start, end) =>
+        await this.makeCall(this.contract.bulkGetSpawnPlanetIds, [start + startingAt, end + startingAt]),
+      onProgress
+    );
+    return planetIds.map(locationIdFromEthersBN);
+  }
+
 
   public async getRevealedCoordsByIdIfExists(
     planetId: LocationId

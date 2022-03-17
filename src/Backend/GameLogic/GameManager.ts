@@ -158,7 +158,7 @@ export enum GameManagerEvent {
   InitializedPlayerError = 'InitializedPlayerError',
   ArtifactUpdate = 'ArtifactUpdate',
   Moved = 'Moved',
-  Gameover = 'Gameover'
+  Gameover = 'Gameover',
 }
 
 class GameManager extends EventEmitter {
@@ -386,9 +386,9 @@ class GameManager extends EventEmitter {
     artifacts: Map<ArtifactId, Artifact>,
     ethConnection: EthConnection,
     paused: boolean,
-    // countdownStart: number | undefined 
+    // countdownStart: number | undefined
     gameover: boolean,
-    winners: string[]
+    winners: string[],
   ) {
     super();
 
@@ -883,8 +883,7 @@ class GameManager extends EventEmitter {
       .on(ContractsAPIEvent.Gameover, async () => {
         gameManager.setGameover(true);
         gameManager.gameover$.publish(true);
-      })
-      ;
+      });
 
     const unconfirmedTxs = await persistentChunkStore.getUnconfirmedSubmittedEthTxs();
     const confirmationQueue = new ThrottledConcurrentQueue({
@@ -1688,9 +1687,7 @@ class GameManager extends EventEmitter {
   private async setGameover(gameover: boolean) {
     this.gameover = gameover;
     this.winners = await this.contractsAPI.getWinners();
-    
   }
-
 
   private async refreshTwitters(): Promise<void> {
     const addressTwitters = await getAllTwitters();
@@ -1972,7 +1969,10 @@ class GameManager extends EventEmitter {
       const tx = await this.contractsAPI.submitTransaction(txIntent);
       return tx;
     } catch (e) {
-      this.getNotificationsManager().txInitError(ContractMethodName.INVADE_TARGET_PLANET, e.message);
+      this.getNotificationsManager().txInitError(
+        ContractMethodName.INVADE_TARGET_PLANET,
+        e.message
+      );
       throw e;
     }
   }
@@ -2032,8 +2032,8 @@ class GameManager extends EventEmitter {
     try {
       const planet = this.entityStore.getPlanetWithId(locationId);
 
-      if(this.gameover) {
-        throw new Error('game is over')
+      if (this.gameover) {
+        throw new Error('game is over');
       }
 
       if (!planet) {
@@ -2091,9 +2091,45 @@ class GameManager extends EventEmitter {
       if (this.checkGameHasEnded()) {
         throw new Error('game has ended');
       }
+      
+      let planet : LocatablePlanet
+      if (this.contractConstants.MANUAL_SPAWN) {
+        this.terminal.current?.println(`Retrieving available manual planets`);
 
-      const planet = await this.findRandomHomePlanet();
+        const spawnPlanets = await this.contractsAPI.getSpawnPlanetIds(0);
+        console.log(`all manually created spawn planets: ${spawnPlanets}`);
+  
+        const potentialHomeIds = spawnPlanets.filter(planetId => {
+          const planet = this.getGameObjects().getPlanetWithId(planetId);
+          if(!planet) {
+            console.log("not a planet")
+            return false;
+          }
+          console.log(`planet has owner: ${planet.owner}`);
+          if(this.hasOwner(planet)) {
+            return false;
+          }
+          if(!isLocatable(planet)) {
+            console.log("planet not locatable");
+            return false;
+          }
+          return true;
+        })
+
+        if(potentialHomeIds.length == 0) {
+          throw new Error('no spawn locations available');
+        }
+        const potentialHomePlanets = potentialHomeIds.map(planetId => {
+          return this.getGameObjects().getPlanetWithId(planetId) as LocatablePlanet
+        })
+        planet = potentialHomePlanets[0];
+
+      } else {
+        planet = await this.findRandomHomePlanet();
+      }
+
       this.homeLocation = planet.location;
+
       this.terminal.current?.println('');
       this.terminal.current?.println(`Found Suitable Home Planet: ${getPlanetName(planet)} `);
       this.terminal.current?.println(
@@ -2102,7 +2138,6 @@ class GameManager extends EventEmitter {
       this.terminal.current?.println('');
 
       await this.persistentChunkStore.addHomeLocation(planet.location);
-
       const getArgs = async () => {
         const args = await this.snarkHelper.getInitArgs(
           planet.location.coords.x,
@@ -3646,6 +3681,14 @@ class GameManager extends EventEmitter {
     return this.snarkHelper;
   }
 
+  private hasOwner(planet: Planet): boolean {
+    return !this.isZeroAddress(planet.owner);
+  }
+
+  private isZeroAddress(address: string): boolean {
+    return '0x0000000000000000000000000000000000000000' == address;
+  }
+
   public async submitTransaction<T extends TxIntent>(
     txIntent: T,
     overrides?: providers.TransactionRequest
@@ -3669,12 +3712,12 @@ class GameManager extends EventEmitter {
     return this.gameover;
   }
 
-  public getGameover$(): Monomitter<boolean>  {
+  public getGameover$(): Monomitter<boolean> {
     return this.gameover$;
   }
 
-  public getWinners() : string[] {
-    return this.winners
+  public getWinners(): string[] {
+    return this.winners;
   }
 }
 
