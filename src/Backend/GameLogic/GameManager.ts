@@ -355,6 +355,12 @@ class GameManager extends EventEmitter {
     return this.contractConstants.PLANET_RARITY;
   }
 
+  private gameover: boolean;
+
+  public gameover$: Monomitter<boolean>;
+
+  private winners: string[];
+
   /**
    * Generates capture zones.
    */
@@ -381,6 +387,8 @@ class GameManager extends EventEmitter {
     ethConnection: EthConnection,
     paused: boolean,
     // countdownStart: number | undefined 
+    gameover: boolean,
+    winners: string[]
   ) {
     super();
 
@@ -403,8 +411,11 @@ class GameManager extends EventEmitter {
     this.account = account;
     this.players = players;
     this.worldRadius = worldRadius;
+    this.gameover = gameover;
+    this.winners = winners;
     this.networkHealth$ = monomitter(true);
     this.paused$ = monomitter(true);
+    this.gameover$ = monomitter(false);
     this.playersUpdated$ = monomitter();
 
     if (contractConstants.CAPTURE_ZONES_ENABLED) {
@@ -678,7 +689,9 @@ class GameManager extends EventEmitter {
       useMockHash,
       knownArtifacts,
       connection,
-      initialState.paused
+      initialState.paused,
+      initialState.gameover,
+      initialState.winners
     );
 
     gameManager.setPlayerTwitters(initialState.twitters);
@@ -867,10 +880,9 @@ class GameManager extends EventEmitter {
         //     await gameManager.setCountdown(gameManager.contractConstants.TARGET_PLANET_HOLD_BLOCKS_REQUIRED);
         // }
       })
-      .on(ContractsAPIEvent.Gameover, async (winner: string) => {
-        // await gameManager.setGameover();
-        gameManager.emit(GameManagerEvent.Gameover);
-
+      .on(ContractsAPIEvent.Gameover, async () => {
+        gameManager.setGameover(true);
+        gameManager.gameover$.publish(true);
       })
       ;
 
@@ -1673,6 +1685,13 @@ class GameManager extends EventEmitter {
     }
   }
 
+  private async setGameover(gameover: boolean) {
+    this.gameover = gameover;
+    this.winners = await this.contractsAPI.getWinners();
+    
+  }
+
+
   private async refreshTwitters(): Promise<void> {
     const addressTwitters = await getAllTwitters();
     this.setPlayerTwitters(addressTwitters);
@@ -2012,11 +2031,10 @@ class GameManager extends EventEmitter {
   public async claimVictory(locationId: LocationId) {
     try {
       const planet = this.entityStore.getPlanetWithId(locationId);
-      // const gameover = this.entityStore.gameover;
 
-      // if(gameover) {
-      //   throw new Error('game is over')
-      // }
+      if(this.gameover) {
+        throw new Error('game is over')
+      }
 
       if (!planet) {
         throw new Error('planet is not loaded');
@@ -3645,6 +3663,18 @@ class GameManager extends EventEmitter {
 
   public getPaused$(): Monomitter<boolean> {
     return this.paused$;
+  }
+
+  public getGameover(): boolean {
+    return this.gameover;
+  }
+
+  public getGameover$(): Monomitter<boolean>  {
+    return this.gameover$;
+  }
+
+  public getWinners() : string[] {
+    return this.winners
   }
 }
 

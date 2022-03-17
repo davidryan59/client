@@ -80,7 +80,7 @@ export function TargetPlanetButton({
     );
   }, [uiManager, planetWrapper, currentBlockNumber]);
 
-  const claimable = useMemo(() => blocksLeftToClaimVictory !== undefined && blocksLeftToClaimVictory <= 0, [blocksLeftToClaimVictory]);
+  const claimable = useMemo(() => blocksLeftToClaimVictory !== undefined && blocksLeftToClaimVictory <= 0 && !planetWrapper.value?.capturer, [blocksLeftToClaimVictory]);
 
   const claimingVictory = useMemo(
     () => planetWrapper.value?.transactions?.hasTransaction(isUnconfirmedClaimVictoryTx),

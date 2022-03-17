@@ -364,8 +364,9 @@ export class ContractsAPI extends EventEmitter {
       [ContractEvent.TargetPlanetInvaded]: (player: string, location: EthersBN) => {
         this.emit(ContractsAPIEvent.PlanetClaimed, player, locationIdFromEthersBN(location));
       },
-      [ContractEvent.Gameover]: (player: string) => {
-        this.emit(ContractsAPIEvent.Gameover, address(player));
+      [ContractEvent.Gameover]: (location: EthersBN) => {
+        this.emit(ContractsAPIEvent.PlanetUpdate, locationIdFromEthersBN(location));
+        this.emit(ContractsAPIEvent.Gameover);
       }
     };
 
