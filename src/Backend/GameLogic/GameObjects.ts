@@ -514,7 +514,6 @@ export class GameObjects {
     if (claimerEthAddress) {
       planet.claimer = claimerEthAddress;
     }
-
     this.setPlanet(planet);
 
     if (updatedArrivals) {

@@ -10,7 +10,6 @@ import { AccountLabel } from '../Components/Labels/Labels';
 export function Gameover() {
   const uiManager = useUIManager();
   const winners = uiManager.getWinners();
-  console.log(`winners: ${winners}`)
   const gameover = useGameover();
   if (!gameover) {
     return <></>;
