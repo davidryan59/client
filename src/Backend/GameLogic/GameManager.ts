@@ -525,7 +525,7 @@ class GameManager extends EventEmitter {
 
     this.refreshScoreboard();
     this.refreshNetworkHealth();
-    this.getSpaceships();
+    // this.getSpaceships();
 
     this.safeMode = false;
   }
@@ -2185,7 +2185,7 @@ class GameManager extends EventEmitter {
         }
       }
 
-      await this.getSpaceships();
+      // await this.getSpaceships();
       await this.hardRefreshPlanet(planet.locationId);
 
       this.emit(GameManagerEvent.InitializedPlayer);
