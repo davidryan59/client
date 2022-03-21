@@ -1,6 +1,8 @@
 import { INIT_ADDRESS } from '@darkforest_eth/contracts';
 // This is loaded as URL paths by a webpack loader
 import initContractAbiUrl from '@darkforest_eth/contracts/abis/DFInitialize.json';
+import arenaInitContractAbiUrl from '@darkforest_eth/contracts/abis/DFArenaInitialize.json';
+
 import { EthConnection } from '@darkforest_eth/network';
 import { address } from '@darkforest_eth/serde';
 import {
@@ -162,7 +164,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
     const initializers = { ...startingConfig, ...config };
 
     console.log(initializers);
-    const InitABI = await fetch(initContractAbiUrl).then((r) => r.json());
+    const InitABI = await fetch(arenaInitContractAbiUrl).then((r) => r.json());
     const artifactBaseURI = '';
     const initInterface = Contract.getInterface(InitABI);
     const initAddress = INIT_ADDRESS;
