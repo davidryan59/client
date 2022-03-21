@@ -145,7 +145,9 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             CAPTURE_ZONES_PER_5000_WORLD_RADIUS: config.CAPTURE_ZONES_PER_5000_WORLD_RADIUS,
             TARGET_PLANETS : config.TARGET_PLANETS,
             TARGET_PLANET_HOLD_BLOCKS_REQUIRED: config.TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
-            MANUAL_SPAWN: config.MANUAL_SPAWN
+            MANUAL_SPAWN: config.MANUAL_SPAWN,
+            ADMIN_PLANETS: []
+
           });
         })
         .catch((e) => {

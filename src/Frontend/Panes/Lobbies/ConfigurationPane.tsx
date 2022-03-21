@@ -24,6 +24,7 @@ import {
 } from './LobbiesUtils';
 import { MinimapConfig } from './MinimapUtils';
 import { PlanetPane } from './PlanetPane';
+import { CreatePlanetPane } from './CreatePlanetPane';
 import { PlayerSpawnPane } from './PlayerSpawnPane';
 import {
   InvalidConfigError,
@@ -37,6 +38,7 @@ import { SnarkPane } from './SnarkPane';
 import { SpaceJunkPane } from './SpaceJunkPane';
 import { SpaceTypeBiomePane } from './SpaceTypeBiomePane';
 import { WorldSizePane } from './WorldSizePane';
+import { ArenaModePane } from './ArenaModePane';
 
 interface PaneConfig {
   title: string;
@@ -105,6 +107,18 @@ const panes: ReadonlyArray<PaneConfig> = [
     shortcut: `0`,
     path: '/settings/snark',
     Pane: (props: LobbiesPaneProps) => <SnarkPane {...props} />,
+  },
+  {
+    title: 'Arena',
+    shortcut: `-`,
+    path: '/settings/arena',
+    Pane: (props: LobbiesPaneProps) => <ArenaModePane {...props} />,
+  },
+  {
+    title: 'Create Planets',
+    shortcut: `+`,
+    path: '/settings/create',
+    Pane: (props: LobbiesPaneProps) => <CreatePlanetPane {...props} />,
   },
 ] as const;
 
