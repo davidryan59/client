@@ -38,6 +38,10 @@ function generate(config: MinimapConfig): DrawMessage {
     return false;
   };
 
+  const checkPlanet = (x: number, y: number) : boolean => {
+    return !!config.planets.find(planet => planet.x == x && planet.y == y)
+  }
+
   // generate x coordinates
   for (let i = radius * -1; i < radius; i += step) {
     // generate y coordinates
@@ -49,10 +53,13 @@ function generate(config: MinimapConfig): DrawMessage {
           x: i,
           y: j,
           type: spaceTypeFromPerlin(spaceTypePerlin({ x: i, y: j }, config), config),
+          planet: checkPlanet(i, j)
         });
       }
     }
   }
+
+
 
   return { radius, data };
 }
