@@ -1,6 +1,18 @@
 import { INIT_ADDRESS } from '@darkforest_eth/contracts';
 // This is loaded as URL paths by a webpack loader
-import initContractAbiUrl from '@darkforest_eth/contracts/abis/DFInitialize.json';
+import { fakeHash, mimcHash, modPBigInt, perlin } from '@darkforest_eth/hashing';
+// import * as snarkjs from 'snarkjs';
+import revealCircuitPath from '@darkforest_eth/snarks/reveal.wasm';
+import revealZkeyPath from '@darkforest_eth/snarks/reveal.zkey';
+
+import {
+  buildContractCallArgs,
+  fakeProof,
+  RevealSnarkContractCallArgs,
+  RevealSnarkInput,
+  SnarkJSProofAndSignals,
+} from '@darkforest_eth/snarks';
+
 import arenaInitContractAbiUrl from '@darkforest_eth/contracts/abis/DFArenaInitialize.json';
 
 import { EthConnection } from '@darkforest_eth/network';
@@ -9,9 +21,14 @@ import {
   ArtifactRarity,
   ContractMethodName,
   EthAddress,
+  LocationId,
   UnconfirmedCreateLobby,
+  UnconfirmedCreatePlanet,
+  UnconfirmedReveal,
+  WorldCoords,
+  WorldLocation,
 } from '@darkforest_eth/types';
-import { Contract } from 'ethers';
+import { BigNumber, BigNumberish, Contract } from 'ethers';
 import _ from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RouteComponentProps } from 'react-router-dom';
@@ -21,10 +38,11 @@ import { InitRenderState, Wrapper } from '../Components/GameLandingPageComponent
 import { ConfigurationPane } from '../Panes/Lobbies/ConfigurationPane';
 import { Minimap } from '../Panes/Lobbies/MinimapPane';
 import { MinimapConfig } from '../Panes/Lobbies/MinimapUtils';
-import { LobbyInitializers } from '../Panes/Lobbies/Reducer';
+import { AdminPlanet, LobbyInitializers } from '../Panes/Lobbies/Reducer';
 import { listenForKeyboardEvents, unlinkKeyboardEvents } from '../Utils/KeyEmitters';
 import { CadetWormhole } from '../Views/CadetWormhole';
 import { LobbyLandingPage } from './LobbyLandingPage';
+import GameUIManager from '../../Backend/GameLogic/GameUIManager';
 
 type ErrorState =
   | { type: 'invalidAddress' }
@@ -143,11 +161,10 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             CAPTURE_ZONE_RADIUS: config.CAPTURE_ZONE_RADIUS,
             CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED: config.CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED,
             CAPTURE_ZONES_PER_5000_WORLD_RADIUS: config.CAPTURE_ZONES_PER_5000_WORLD_RADIUS,
-            TARGET_PLANETS : config.TARGET_PLANETS,
+            TARGET_PLANETS: config.TARGET_PLANETS,
             TARGET_PLANET_HOLD_BLOCKS_REQUIRED: config.TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
             MANUAL_SPAWN: config.MANUAL_SPAWN,
-            ADMIN_PLANETS: []
-
+            ADMIN_PLANETS: [],
           });
         })
         .catch((e) => {
@@ -156,6 +173,147 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         });
     }
   }, [contract]);
+
+  async function createAndRevealPlanets(
+    initializers: LobbyInitializers,
+    contractAddress: EthAddress
+  ) {
+    // const contract = await hre.ethers.getContractAt('DarkForest', hre.contracts.CONTRACT_ADDRESS);
+    console.log('creating and revealing planets');
+    if (!connection) return;
+    const lobbyContract = await makeContractsAPI({ connection, contractAddress });
+    console.log(lobbyContract);
+    if (!lobbyContract) {
+      setErrorState({ type: 'invalidCreate' });
+      return;
+    }
+
+    const planets = initializers.ADMIN_PLANETS;
+    if (!planets) return;
+
+    for (const planet of planets) {
+      console.log(`current planet: ${JSON.stringify(planet)}`);
+      try {
+        const location = initializers.DISABLE_ZK_CHECKS
+          ? fakeHash(initializers.PLANET_RARITY)(planet.x, planet.y).toString()
+          : mimcHash(initializers.PLANETHASH_KEY)(planet.x, planet.y).toString();
+        console.log(`location: ${location}`);
+
+        const planetCoords = {
+          x: planet.x,
+          y: planet.y,
+        };
+        console.log(`planetCoords: ${planetCoords}`);
+
+        const perlinValue = perlin(planetCoords, {
+          key: initializers.SPACETYPE_KEY,
+          scale: initializers.PERLIN_LENGTH_SCALE,
+          mirrorX: initializers.PERLIN_MIRROR_X,
+          mirrorY: initializers.PERLIN_MIRROR_Y,
+          floor: true,
+        });
+        console.log(`perlinValue: ${perlinValue}`);
+
+        const biomeBase = perlin(planetCoords, {
+          key: initializers.BIOMEBASE_KEY,
+          scale: initializers.PERLIN_LENGTH_SCALE,
+          mirrorX: initializers.PERLIN_MIRROR_X,
+          mirrorY: initializers.PERLIN_MIRROR_Y,
+          floor: true,
+        });
+        console.log(`biomeBase: ${biomeBase}`);
+        const locNum = location as BigNumberish;
+
+        const args = Promise.resolve([
+          {
+            location: locNum,
+            perlin: perlinValue,
+            level: planet.level,
+            planetType: planet.planetType,
+            requireValidLocationId: planet.requireValidLocationId,
+            isTargetPlanet: planet.isTargetPlanet,
+            isSpawnPlanet: planet.isSpawnPlanet,
+          },
+        ]);
+
+        console.log(`args: ${JSON.stringify(await args)}`);
+
+        const txIntent: UnconfirmedCreatePlanet = {
+          methodName: ContractMethodName.CREATE_PLANET,
+          contract: lobbyContract.contract,
+          args: args,
+        };
+
+        console.log(`creating planet`);
+
+        const tx = await lobbyContract.submitTransaction(txIntent, {
+          // The createLobby function costs somewhere around 12mil gas
+          gasLimit: '16777215',
+        });
+
+        await tx.confirmedPromise;
+        console.log(`planet created`);
+
+        if (planet.revealLocation) {
+          console.log(`revealing planet`);
+
+          let proofArgs = [
+            planet.x,
+            planet.y,
+            initializers.PLANETHASH_KEY,
+            initializers.SPACETYPE_KEY,
+            initializers.PERLIN_LENGTH_SCALE,
+            initializers.PERLIN_MIRROR_X,
+            initializers.PERLIN_MIRROR_Y,
+            initializers.DISABLE_ZK_CHECKS,
+            initializers.PLANET_RARITY,
+          ];
+          console.log(`proofArgs: ${proofArgs}`);
+
+          const getArgs = async () => {
+            const revealArgs =  await makeRevealProof(
+              planet.x,
+              planet.y,
+              initializers.PLANETHASH_KEY,
+              initializers.SPACETYPE_KEY,
+              initializers.PERLIN_LENGTH_SCALE,
+              initializers.PERLIN_MIRROR_X,
+              initializers.PERLIN_MIRROR_Y,
+              initializers.DISABLE_ZK_CHECKS,
+              initializers.PLANET_RARITY
+            );
+            return revealArgs;
+          }
+
+          const worldLocation = {
+            coords: planetCoords as WorldCoords,
+            hash: location.toString() as LocationId,
+            perlin: perlinValue,
+            biomebase: biomeBase,
+          } as WorldLocation;
+
+          const txIntent: UnconfirmedReveal = {
+            methodName: ContractMethodName.REVEAL_LOCATION,
+            contract: lobbyContract.contract,
+            locationId: location.toString() as LocationId,
+            location: worldLocation,
+            args: getArgs(),
+          };
+
+          // Always await the submitTransaction so we can catch rejections
+          const tx = await lobbyContract.submitTransaction(txIntent);
+          console.log(`reveal tx submitted`);
+
+          await tx.confirmedPromise;
+          console.log(`reveal tx accepted`);
+        }
+        console.log(`created admin planet at (${planet.x}, ${planet.y})`);
+      } catch (e) {
+        console.log(`error creating planet at (${planet.x}, ${planet.y}):`);
+        console.log(e);
+      }
+    }
+  }
 
   async function createLobby(config: LobbyInitializers) {
     if (!contract) {
@@ -181,10 +339,12 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
       args: Promise.resolve([initAddress, initFunctionCall]),
     };
 
-    contract.once(ContractsAPIEvent.LobbyCreated, (owner: EthAddress, lobby: EthAddress) => {
+    contract.once(ContractsAPIEvent.LobbyCreated, async (owner: EthAddress, lobby: EthAddress) => {
       if (owner === ownerAddress) {
         setLobbyAddress(lobby);
       }
+
+      await createAndRevealPlanets(initializers, lobby as EthAddress);
     });
 
     const tx = await contract.submitTransaction(txIntent, {
@@ -233,4 +393,60 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
       {content}
     </Wrapper>
   );
+}
+
+async function makeRevealProof(
+  x: number,
+  y: number,
+  planetHashKey: number,
+  spaceTypeKey: number,
+  scale: number,
+  mirrorX: boolean,
+  mirrorY: boolean,
+  zkChecksDisabled: boolean,
+  planetRarity: number
+): Promise<RevealSnarkContractCallArgs> {
+  if (zkChecksDisabled) {
+    const location = fakeHash(planetRarity)(x, y).toString();
+    const perlinValue = perlin(
+      { x, y },
+      {
+        key: spaceTypeKey,
+        scale,
+        mirrorX,
+        mirrorY,
+        floor: true,
+      }
+    );
+    const { proof, publicSignals } = fakeProof([
+      location,
+      perlinValue.toString(),
+      modPBigInt(x).toString(),
+      modPBigInt(y).toString(),
+      planetHashKey.toString(),
+      spaceTypeKey.toString(),
+      scale.toString(),
+      mirrorX ? '1' : '0',
+      mirrorY ? '1' : '0',
+    ]);
+    return buildContractCallArgs(proof, publicSignals) as RevealSnarkContractCallArgs;
+  } else {
+    const input: RevealSnarkInput = {
+      x: modPBigInt(x).toString(),
+      y: modPBigInt(y).toString(),
+      PLANETHASH_KEY: planetHashKey.toString(),
+      SPACETYPE_KEY: spaceTypeKey.toString(),
+      SCALE: scale.toString(),
+      xMirror: mirrorX ? '1' : '0',
+      yMirror: mirrorY ? '1' : '0',
+    };
+
+    const { proof, publicSignals }: SnarkJSProofAndSignals = await window.snarkjs.groth16.fullProve(
+      input,
+      revealCircuitPath,
+      revealZkeyPath
+    );
+
+    return buildContractCallArgs(proof, publicSignals) as RevealSnarkContractCallArgs;
+  }
 }
