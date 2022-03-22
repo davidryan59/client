@@ -28,19 +28,6 @@ const TableContainer = styled.div`
   width: 100%;
 `;
 
-const sampleAdminPlanets = [
-  {
-    x: 0,
-    y: 0,
-    level: 3,
-    planetType: 2,
-    requireValidLocationId: true,
-    revealLocation: true,
-    isTargetPlanet: false,
-    isSpawnPlanet: false,
-  },
-];
-
 function formatBool(bool: boolean) {
   return bool ? <Green>Y</Green> : <Red>N</Red>;
 }

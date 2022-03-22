@@ -34,7 +34,7 @@ function drawOnCanvas(canvas: HTMLCanvasElement | null, msg: DrawMessage) {
 
   for (let i = 0; i < data.length; i++) {
     if(data[i].planet) {
-      ctx.fillStyle = '#00FF00'; // planet
+      ctx.fillStyle = '#FF0000'; // planet
     } else if (data[i].type === 0) {
       ctx.fillStyle = '#186469'; // inner nebula
     } else if (data[i].type === 1) {

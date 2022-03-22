@@ -142,7 +142,7 @@ export type LobbyConfigAction =
   };
 
 // TODO(#2328): WHITELIST_ENABLED should just be on Initializers
-export type LobbyInitializers = Initializers & { WHITELIST_ENABLED: boolean | undefined } & {ADMIN_PLANETS: AdminPlanet[] | undefined};
+export type LobbyInitializers = Initializers & { WHITELIST_ENABLED: boolean | undefined } & {ADMIN_PLANETS: AdminPlanet[]};
 
 export type LobbyConfigState = {
   [key in keyof LobbyInitializers]: {
@@ -1882,15 +1882,15 @@ export function ofAdminPlanets(
   const currentValue = [...prevCurrentValue];
   const displayValue = [...prevDisplayValue];
 
-  if(prevCurrentValue[index]){
+  if(currentValue[index]){
 
-    const updatedValue = prevCurrentValue.splice(index, 1)
-    const updatedDisplayValue = prevDisplayValue.splice(index, 1)
+    currentValue.splice(index, 1)
+    displayValue.splice(index, 1)
 
     return {
     ...state[type],
-    updatedValue,
-    updatedDisplayValue,
+    currentValue,
+    displayValue,
     warning: undefined,
     }
   };

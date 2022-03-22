@@ -39,7 +39,10 @@ function generate(config: MinimapConfig): DrawMessage {
   };
 
   const checkPlanet = (x: number, y: number) : boolean => {
-    return !!config.planets.find(planet => planet.x == x && planet.y == y)
+    let s = (step - 1)/2;
+    let ret = !!config.planets.find(planet => x - s < planet.x && planet.x < x + s && y - s < planet.y && planet.y < y + s)
+    if (ret) ( console.log(`x: ${x}, y: ${y}, step: ${s}`))
+    return ret;
   }
 
   // generate x coordinates
