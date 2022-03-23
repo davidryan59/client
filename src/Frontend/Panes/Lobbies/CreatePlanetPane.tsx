@@ -38,7 +38,7 @@ const defaultPlanet: AdminPlanet = {
   level: 0,
   planetType: 0,
   requireValidLocationId: false,
-  revealLocation: false,
+  revealLocation: true,
   isTargetPlanet: false,
   isSpawnPlanet: false,
 };
@@ -65,7 +65,7 @@ export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: Lobbies
     ),
   ];
 
-  function AdminPlanets({ config, onUpdate }: LobbiesPaneProps) {
+  function AdminPlanets({ config }: LobbiesPaneProps) {
     const adminPlanets = config.ADMIN_PLANETS.currentValue;
     return adminPlanets && adminPlanets.length > 0 ? (
       <TableContainer>
@@ -79,6 +79,30 @@ export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: Lobbies
       </TableContainer>
     ) : (
       <Sub>No planets created</Sub>
+    );
+  }
+
+  function Tips() {
+    return (
+      <>
+        <Row>
+          <span>Tips about planet creation</span>
+        </Row>
+        <Subber>
+          <Row>
+            Planet types: 0 -- Planet, 1 -- Asteroid, 2 -- Foundry, 3 -- Spacetime Rip, 4 -- Phasar
+          </Row>
+        </Subber>
+        <Row>
+          <Subber>It is strongly recommended to keep "requireValidLocationId" unchecked</Subber>
+        </Row>
+        <Row>
+          <Subber>
+            If you want to play with spawn planets activated, you must create at least one revealed Spawn
+            Planet
+          </Subber>
+        </Row>
+      </>
     );
   }
 
@@ -145,6 +169,8 @@ export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: Lobbies
       <Row>
         <AdminPlanets config={config} onUpdate={onUpdate} />
       </Row>
+      <hr />
+      <Tips />
     </>
   );
 }

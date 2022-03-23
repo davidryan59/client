@@ -56,6 +56,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
   const [contract, setContract] = useState<ContractsAPI | undefined>();
   const [startingConfig, setStartingConfig] = useState<LobbyInitializers | undefined>();
   const [lobbyAddress, setLobbyAddress] = useState<EthAddress | undefined>();
+  const [status, setStatus] = useState<string>();
   const [minimapConfig, setMinimapConfig] = useState<MinimapConfig | undefined>();
 
   const onMapChange = useMemo(() => {
@@ -192,6 +193,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
     if (!planets) return;
 
     for (const planet of planets) {
+      setStatus(`Creating planet at (${planet.x}, ${planet.y})...`);
+
       console.log(`current planet: ${JSON.stringify(planet)}`);
       try {
         const location = initializers.DISABLE_ZK_CHECKS
@@ -255,6 +258,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         console.log(`planet created`);
 
         if (planet.revealLocation) {
+          setStatus(`Revealing planet at (${planet.x}, ${planet.y}...)`);
+
           console.log(`revealing planet`);
 
           let proofArgs = [
@@ -320,7 +325,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
       setErrorState({ type: 'invalidCreate' });
       return;
     }
-
+    setStatus("Creating Lobby...");
     const initializers = { ...startingConfig, ...config };
 
     console.log(initializers);
@@ -341,10 +346,11 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
 
     contract.once(ContractsAPIEvent.LobbyCreated, async (owner: EthAddress, lobby: EthAddress) => {
       if (owner === ownerAddress) {
+        await createAndRevealPlanets(initializers, lobby as EthAddress);
+        setStatus("Lobby Created...");
         setLobbyAddress(lobby);
       }
 
-      await createAndRevealPlanets(initializers, lobby as EthAddress);
     });
 
     const tx = await contract.submitTransaction(txIntent, {
@@ -376,6 +382,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         <ConfigurationPane
           modalIndex={2}
           lobbyAddress={lobbyAddress}
+          progress= {status || ''}
           startingConfig={startingConfig}
           onMapChange={onMapChange}
           onCreate={createLobby}

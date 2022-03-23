@@ -127,11 +127,13 @@ type Status = 'creating' | 'created' | 'errored' | undefined;
 function ConfigurationNavigation({
   error,
   lobbyAddress,
+  progress,
   status,
   onCreate,
 }: {
   error: string | undefined;
   lobbyAddress: EthAddress | undefined;
+  progress: string;
   status: Status;
   onCreate: () => Promise<void>;
 }) {
@@ -200,7 +202,7 @@ function ConfigurationNavigation({
       {buttons}
       <Spacer height={20} />
       <Btn size='stretch' onClick={onCreate} disabled={createDisabled}>
-        {creating ? <LoadingSpinner initialText='Creating...' /> : 'Create Lobby'}
+        {creating ? <LoadingSpinner initialText= {progress}/> : 'Create Lobby'}
       </Btn>
       <Row>
         <Warning>{error}</Warning>
@@ -213,12 +215,14 @@ function ConfigurationNavigation({
 export function ConfigurationPane({
   modalIndex,
   lobbyAddress,
+  progress,
   startingConfig,
   onMapChange,
   onCreate,
 }: {
   modalIndex: number;
   lobbyAddress: EthAddress | undefined;
+  progress: string;
   startingConfig: LobbyInitializers;
   onMapChange: (props: MinimapConfig) => void;
   onCreate: (config: LobbyInitializers) => Promise<void>;
@@ -279,6 +283,7 @@ export function ConfigurationPane({
       const initializers = toInitializers(config);
       await onCreate(initializers);
       setStatus('created');
+      // await createPlanets(lobbyAddress);
     } catch (err) {
       setStatus('errored');
       console.error(err);
@@ -301,6 +306,7 @@ export function ConfigurationPane({
           <ConfigurationNavigation
             error={error}
             lobbyAddress={lobbyAddress}
+            progress= {progress}
             status={status}
             onCreate={validateAndCreateLobby}
           />
