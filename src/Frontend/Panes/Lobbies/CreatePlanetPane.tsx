@@ -46,7 +46,7 @@ const defaultPlanet: AdminPlanet = {
 export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: LobbiesPaneProps) {
   const [planet, setPlanet] = useState<AdminPlanet>(defaultPlanet);
 
-  const headers = ['Coords', 'Level', 'Type', 'Valid Location?', 'Revealed', 'Spawn', 'Target', ''];
+  const headers = ['Coords', 'Level', 'Type', 'Require Valid', 'Reveal', 'Target', 'Spawn', ''];
   const alignments: Array<'r' | 'c' | 'l'> = ['c', 'c', 'c', 'c', 'l', 'l', 'l', 'l'];
   const columns = [
     (planet: AdminPlanet) => (
@@ -58,8 +58,8 @@ export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: Lobbies
     (planet: AdminPlanet) => <Sub>{planet.planetType}</Sub>,
     (planet: AdminPlanet) => formatBool(planet.requireValidLocationId),
     (planet: AdminPlanet) => formatBool(planet.revealLocation),
-    (planet: AdminPlanet) => formatBool(planet.isSpawnPlanet),
     (planet: AdminPlanet) => formatBool(planet.isTargetPlanet),
+    (planet: AdminPlanet) => formatBool(planet.isSpawnPlanet),
     (planet: AdminPlanet, i: number) => (
       <Btn onClick={() => onUpdate({ type: 'ADMIN_PLANETS', value: planet, index: i })}>X</Btn>
     ),

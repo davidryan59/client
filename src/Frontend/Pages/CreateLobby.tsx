@@ -258,7 +258,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         console.log(`planet created`);
 
         if (planet.revealLocation) {
-          setStatus(`Revealing planet at (${planet.x}, ${planet.y}...)`);
+          setStatus(`Revealing planet at (${planet.x}, ${planet.y})...`);
 
           console.log(`revealing planet`);
 
