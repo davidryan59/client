@@ -24,6 +24,7 @@ import {
   LocationId,
   UnconfirmedCreateLobby,
   UnconfirmedCreatePlanet,
+  UnconfirmedCreateArenaPlanet,
   UnconfirmedReveal,
   WorldCoords,
   WorldLocation,
@@ -241,8 +242,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
 
         console.log(`args: ${JSON.stringify(await args)}`);
 
-        const txIntent: UnconfirmedCreatePlanet = {
-          methodName: ContractMethodName.CREATE_PLANET,
+        const txIntent: UnconfirmedCreateArenaPlanet = {
+          methodName: ContractMethodName.CREATE_ARENA_PLANET,
           contract: lobbyContract.contract,
           args: args,
         };
@@ -315,7 +316,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         console.log(`created admin planet at (${planet.x}, ${planet.y})`);
       } catch (e) {
         console.log(`error creating planet at (${planet.x}, ${planet.y}):`);
-        console.log(e);
+        alert(`error creating planet at (${planet.x}, ${planet.y}): ${e}.`);
       }
     }
   }

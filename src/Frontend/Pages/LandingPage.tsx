@@ -65,11 +65,11 @@ export default function LandingPage() {
 
             <ButtonWrapper>
               <Btn size='large' onClick={() => history.push(`/lobby/${defaultAddress}`)}>
-                Create Lobby
+                Create Arena
               </Btn>
-              <Btn size='large' onClick={() => history.push(`/play/${defaultAddress}`)}>
-                Enter Round 5
-              </Btn>
+              {/* <Btn size='large' onClick={() => history.push(`/play/${defaultAddress}`)}>
+                Join Lobby
+              </Btn> */}
             </ButtonWrapper>
           </Header>
 

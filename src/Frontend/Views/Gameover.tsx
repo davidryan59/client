@@ -25,8 +25,10 @@ export function Gameover() {
         }
         name={TooltipName.Empty}
       >
-                    <Gold>GAMEOVER!</Gold> The winner{winners.length > 1 ? 's are' : ' is'} {winners.map((winner => <AccountLabel includeAddressIfHasTwitter = {true} ethAddress = {winner as EthAddress}/>))}
-
+        <Gold>GAMEOVER!</Gold> The winner{winners.length > 1 ? 's are' : ' is'}{' '}
+        {winners.map((winner, idx) => (
+          <AccountLabel key = {idx} includeAddressIfHasTwitter={true} ethAddress={winner as EthAddress} />
+        ))}
       </TooltipTrigger>
     </GameoverContainer>
   );
