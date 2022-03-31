@@ -7,7 +7,7 @@ import { Btn } from '../Components/Btn';
 import { EmSpacer, Link, Spacer, Title } from '../Components/CoreUI';
 import { EmailCTA, EmailCTAMode } from '../Components/Email';
 import { Modal } from '../Components/Modal';
-import { HideSmall, Sub, Text, White } from '../Components/Text';
+import { HideSmall, Red, Sub, Text, White } from '../Components/Text';
 import dfstyles from '../Styles/dfstyles';
 import { LandingPageRoundArt } from '../Views/LandingPageRoundArt';
 import { LeadboardDisplay } from '../Views/Leaderboard';
@@ -19,11 +19,11 @@ export const enum LandingPageZIndex {
 }
 
 const links = {
-  twitter: 'http://twitter.com/darkforest_eth',
+  twitter: 'http://twitter.com/d_fdao',
   email: 'mailto:contact@zkga.me',
-  blog: 'https://blog.zkga.me/',
-  discord: 'https://discord.gg/2u2TN6v8r6',
-  github: 'https://github.com/darkforest-eth',
+  blog: 'https://medium.com/dfdao',
+  discord: 'https://discord.gg/5NJ72xmE',
+  github: 'https://github.com/dfdao',
 };
 
 const defaultAddress = address(CONTRACT_ADDRESS);
@@ -45,7 +45,7 @@ export default function LandingPage() {
   return (
     <>
       <PrettyOverlayGradient />
-      <Hiring />
+      {/* <Hiring /> */}
 
       <Page>
         <Spacer height={150} />
@@ -57,19 +57,18 @@ export default function LandingPage() {
             <p>
               <White>Dark Forest</White> <Text>zkSNARK space warfare</Text>
               <br />
-              <Text>Round 5: </Text>
-              <White>The Junk Wars</White>
+              <Red>Battle Arena</Red>
             </p>
 
             <Spacer height={16} />
 
             <ButtonWrapper>
               <Btn size='large' onClick={() => history.push(`/lobby/${defaultAddress}`)}>
-                Create Lobby
+                Create Arena
               </Btn>
-              <Btn size='large' onClick={() => history.push(`/play/${defaultAddress}`)}>
-                Enter Round 5
-              </Btn>
+              {/* <Btn size='large' onClick={() => history.push(`/play/${defaultAddress}`)}>
+                Join Lobby
+              </Btn> */}
             </ButtonWrapper>
           </Header>
 
@@ -229,7 +228,7 @@ export default function LandingPage() {
 
         <Spacer height={128} />
 
-        <LeadboardDisplay />
+        {/* <LeadboardDisplay /> */}
 
         <Spacer height={256} />
       </Page>
@@ -249,7 +248,7 @@ const VariousLinksContainer = styled.div`
 const PrettyOverlayGradient = styled.div`
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(to left top, rgba(73, 10, 219, 0.2), rgba(1, 255, 1, 0.2)) fixed;
+  background-image: linear-gradient(to right bottom, #63001c, #720039, #77115c, #6d2c82, #4b45a6);
   background-position: 50%, 50%;
   display: inline-block;
   position: fixed;
