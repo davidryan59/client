@@ -248,8 +248,7 @@ const VariousLinksContainer = styled.div`
 const PrettyOverlayGradient = styled.div`
   width: 100vw;
   height: 100vh;
-  background-image: linear-gradient(to right bottom, #63001c, #720039, #77115c, #6d2c82, #4b45a6);
-  background-position: 50%, 50%;
+  background-image: linear-gradient(to right bottom, #511111, #5b0023, #5d003c, #510659, #262077);  background-position: 50%, 50%;
   display: inline-block;
   position: fixed;
   top: 0;
