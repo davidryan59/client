@@ -586,17 +586,21 @@ class GameManager extends EventEmitter {
     connection,
     terminal,
     contractAddress,
+    spectator
   }: {
     connection: EthConnection;
     terminal: React.MutableRefObject<TerminalHandle | undefined>;
     contractAddress: EthAddress;
+    spectator : boolean;
   }): Promise<GameManager> {
     if (!terminal.current) {
       throw new Error('you must pass in a handle to a terminal');
-    }
+    }    
 
-    const account = connection.getAddress();
+    console.log(spectator)
+    const account = spectator ? <EthAddress>'0x0000000000000000000000000000000000000001' : connection.getAddress();
 
+    console.log(account)
     if (!account) {
       throw new Error('no account on eth connection');
     }
@@ -2086,7 +2090,13 @@ class GameManager extends EventEmitter {
   /**
    * Attempts to join the game. Should not be called once you've already joined.
    */
-  public async joinGame(beforeRetry: (e: Error) => Promise<boolean>): Promise<void> {
+  public async joinGame(beforeRetry: (e: Error) => Promise<boolean>, spectator: boolean = false): Promise<void> {
+    
+    if(spectator) {
+      this.initMiningManager({ x: 0, y: 0 });
+      this.emit(GameManagerEvent.InitializedPlayer);
+      return;
+    }
     try {
       if (this.checkGameHasEnded()) {
         throw new Error('game has ended');
