@@ -55,7 +55,6 @@ const enum TerminalPromptStep {
   COMPLETE,
   TERMINATED,
   ERROR,
-  SPECTATE
 }
 
 export function GameLandingPage({ match }: RouteComponentProps<{ contract: string }>) {
@@ -72,7 +71,6 @@ export function GameLandingPage({ match }: RouteComponentProps<{ contract: strin
   const [spectator, setSpectator] = useState<boolean>(false)
   const contractAddress = address(match.params.contract);
   const isLobby = contractAddress !== address(CONTRACT_ADDRESS);
-  const ZERO_ADDRESS = address('0x0000000000000000000000000000000000000001');
 
   useEffect(() => {
     getEthConnection()
@@ -325,62 +323,6 @@ export function GameLandingPage({ match }: RouteComponentProps<{ contract: strin
     [ethConnection]
   );
 
-  const advanceStateFromGenerateSpecatatorWorld = useCallback (
-    async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
-      terminal.current?.println(``);
-      const account = ZERO_ADDRESS;
-      let newGameManager: GameManager;
-
-      try {
-        if (!ethConnection) throw new Error('no eth connection');
-
-        await ethConnection?.setAccount(account);
-        // setStep(TerminalPromptStep.ACCOUNT_SET);
-
-        newGameManager = await GameManager.create({
-          connection: ethConnection,
-          terminal,
-          contractAddress,
-          spectator
-        });
-      setGameManager(newGameManager);
-
-      window.df = newGameManager;
-
-      const newGameUIManager = await GameUIManager.create(newGameManager, terminal);
-
-      window.ui = newGameUIManager;
-
-      terminal.current?.newline();
-      terminal.current?.println('Connected to Dark Forest Contract');
-      gameUIManagerRef.current = newGameUIManager;
-
-      // if (!newGameManager.hasJoinedGame()) {
-      //   setStep(TerminalPromptStep.NO_HOME_PLANET);
-      // } else {
-      //   const browserHasData = !!newGameManager.getHomeCoords();
-      //   if (!browserHasData) {
-      //     terminal.current?.println(
-      //       'ERROR: Home coords not found on this browser.',
-      //       TerminalTextStyle.Red
-      //     );
-      //     setStep(TerminalPromptStep.ASK_ADD_ACCOUNT);
-      //     return;
-      //   }
-        terminal.current?.println('Validated Local Data...');
-        setStep(TerminalPromptStep.ALL_CHECKS_PASS);
-      // }
-
-      } catch (e) {
-        terminal.current?.println(
-          'An unknown error occurred. please try again.',
-          TerminalTextStyle.Red
-          
-        );
-      }
-    }, [ethConnection]
-  );
-
   const advanceStateFromGenerateAccount = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       const newWallet = Wallet.createRandom();
@@ -457,16 +399,13 @@ export function GameLandingPage({ match }: RouteComponentProps<{ contract: strin
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       try {
         const playerAddress = ethConnection?.getAddress();
-        
         if (!playerAddress || !ethConnection) throw new Error('not logged in');
 
         const whitelist = await ethConnection.loadContract<DarkForest>(
           contractAddress,
           loadDiamondContract
         );
-
         const isWhitelisted = await whitelist.isWhitelisted(playerAddress);
-
         // TODO(#2329): isWhitelisted should just check the contractOwner
         const adminAddress = address(await whitelist.adminAddress());
 
@@ -643,7 +582,6 @@ export function GameLandingPage({ match }: RouteComponentProps<{ contract: strin
       try {
         if (!ethConnection) throw new Error('no eth connection');
 
-        console.log(spectator)
         newGameManager = await GameManager.create({
           connection: ethConnection,
           terminal,
@@ -889,8 +827,6 @@ export function GameLandingPage({ match }: RouteComponentProps<{ contract: strin
         await advanceStateFromGenerateAccount(terminal);
       } else if (step === TerminalPromptStep.IMPORT_ACCOUNT) {
         await advanceStateFromImportAccount(terminal);
-      } else if (step === TerminalPromptStep.SPECTATE) {
-        await advanceStateFromGenerateSpecatatorWorld(terminal);
       }else if (step === TerminalPromptStep.ACCOUNT_SET) {
         await advanceStateFromAccountSet(terminal);
       } else if (step === TerminalPromptStep.ASKING_HAS_WHITELIST_KEY) {
