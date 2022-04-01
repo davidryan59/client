@@ -1,5 +1,10 @@
 import React from 'react';
-import { DarkForestNumberInput, NumberInput } from '../../Components/Input';
+import {
+  Checkbox,
+  DarkForestCheckbox,
+  DarkForestNumberInput,
+  NumberInput,
+} from '../../Components/Input';
 import { Row } from '../../Components/Row';
 import { DarkForestSliderHandle, Slider, SliderHandle } from '../../Components/Slider';
 import { LobbiesPaneProps, Warning } from './LobbiesUtils';
@@ -8,8 +13,22 @@ export function PlayerSpawnPane({ config, onUpdate }: LobbiesPaneProps) {
   return (
     <>
       <Row>
+        <Checkbox
+          label='Players can only spawn into admin designated spawn planets?'
+          checked={config.MANUAL_SPAWN.displayValue}
+          onChange={(e: Event & React.ChangeEvent<DarkForestCheckbox>) => {
+            onUpdate({ type: 'MANUAL_SPAWN', value: e.target.checked });
+            if (e.target.checked) {
+              onUpdate({ type: 'INIT_PERLIN_MIN', value: 0 });
+              onUpdate({ type: 'INIT_PERLIN_MAX', value: 32 });
+            }
+          }}
+        />
+      </Row>
+      <Row>
         <Slider min={0} max={32} step={1} variant='range' label='Spawn perlin range'>
           <SliderHandle
+            disabled = {config.MANUAL_SPAWN.currentValue}
             slot='handle'
             name='perlin-min'
             label='Perlin minimum'
@@ -21,6 +40,7 @@ export function PlayerSpawnPane({ config, onUpdate }: LobbiesPaneProps) {
             }}
           />
           <SliderHandle
+            disabled = {config.MANUAL_SPAWN.currentValue}
             slot='handle'
             name='perlin-max'
             label='Perlin maximum'

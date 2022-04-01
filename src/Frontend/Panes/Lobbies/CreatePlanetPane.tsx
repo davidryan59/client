@@ -90,12 +90,9 @@ export function CreatePlanetPane({ config: config, onUpdate: onUpdate }: Lobbies
         </Row>
         <Subber>
           <Row>
-            Planet types: 0 -- Planet, 1 -- Asteroid, 2 -- Foundry, 3 -- Spacetime Rip, 4 -- Phasar
+            Planet types: 0-Planet, 1-Asteroid, 2-Foundry, 3-Spacetime Rip, 4-Phasar
           </Row>
         </Subber>
-        <Row>
-          <Subber>It is strongly recommended to keep "requireValidLocationId" unchecked</Subber>
-        </Row>
         <Row>
           <Subber>
             If you want to play with spawn planets activated, you must create at least one revealed Spawn

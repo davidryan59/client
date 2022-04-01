@@ -10,18 +10,9 @@ import { Row } from '../../Components/Row';
 
 import { LobbiesPaneProps, Warning } from './LobbiesUtils';
 
-export function ArenaModePane({ config: config, onUpdate: onUpdate }: LobbiesPaneProps) {
+export function TargetPlanetPane({ config: config, onUpdate: onUpdate }: LobbiesPaneProps) {
   return (
     <>
-      <Row>
-        <Checkbox
-          label='Players can only spawn into admin designated spawn planets?'
-          checked={config.MANUAL_SPAWN.displayValue}
-          onChange={(e: Event & React.ChangeEvent<DarkForestCheckbox>) =>
-            onUpdate({ type: 'MANUAL_SPAWN', value: e.target.checked })
-          }
-        />
-      </Row>
       <Row>
         <Checkbox
           label='Players win by capturing admin designated target planets?'
