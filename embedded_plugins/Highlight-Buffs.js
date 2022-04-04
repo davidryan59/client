@@ -146,14 +146,8 @@ const filter2xDefense = filter2xStat(StatIdx.Defense, 0);  // defense rank upgra
 const filter2xSpeed = filter2xStat(StatIdx.Speed, 2);  // speed rank upgrades are on planet.upgradeState[2]
 const filter2xRange = filter2xStat(StatIdx.Range, 1);  // range rank upgrades are on planet.upgradeState[1]
 const filterRip = (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planet.planetType === PlanetType.TRADING_POST;
-const filterTarget = (plugin, planet) => {
-  console.log(`${planet.x}, ${planet.y} isTargetPlanet: ${planet.isTargetPlanet}`)
-  return distanceAndLevelInRange(plugin, planet) && planet.isTargetPlanet;
-}
-const filterSpawn = (plugin, planet) => {
-  console.log(`${planet.x}, ${planet.y} isSpawnPlanet: ${planet.isSpawnPlanet}`)
-  return distanceAndLevelInRange(plugin, planet) && planet.isSpawnPlanet;
-}
+const filterTarget = (plugin, planet) =>  distanceAndLevelInRange(plugin, planet) && planet.isTargetPlanet;
+const filterSpawn = (plugin, planet) => distanceAndLevelInRange(plugin, planet) && planet.isSpawnPlanet;
 
 const filterArtifact = (plugin, planet) => {
   // Filter out planets of wrong size

@@ -113,11 +113,10 @@ export type LobbyConfigAction =
       value: Initializers['CAPTURE_ZONES_PER_5000_WORLD_RADIUS'] | undefined;
     }
   | { type: 'WHITELIST_ENABLED'; value: boolean | undefined }
-  | { type: 'MANUAL_SPAWN';
-      value: Initializers['MANUAL_SPAWN'] | undefined; }
+  | { type: 'MANUAL_SPAWN'; value: Initializers['MANUAL_SPAWN'] | undefined }
   | {
       type: 'TARGET_PLANETS';
-      value: Initializers['TARGET_PLANETS'] | undefined; 
+      value: Initializers['TARGET_PLANETS'] | undefined;
     }
   | {
       type: 'TARGET_PLANET_HOLD_BLOCKS_REQUIRED';
@@ -130,19 +129,21 @@ export type LobbyConfigAction =
     };
 
 
-  export type AdminPlanet = {
-    x: number;
-    y: number;
-    level: number;
-    planetType: number;
-    requireValidLocationId: boolean;
-    revealLocation: boolean;
-    isTargetPlanet: boolean;
-    isSpawnPlanet: boolean;
-  };
+export type AdminPlanet = {
+  x: number;
+  y: number;
+  level: number;
+  planetType: number;
+  requireValidLocationId: boolean;
+  revealLocation: boolean;
+  isTargetPlanet: boolean;
+  isSpawnPlanet: boolean;
+};
 
 // TODO(#2328): WHITELIST_ENABLED should just be on Initializers
-export type LobbyInitializers = Initializers & { WHITELIST_ENABLED: boolean | undefined } & {ADMIN_PLANETS: AdminPlanet[]};
+export type LobbyInitializers = Initializers & { WHITELIST_ENABLED: boolean | undefined } & {
+  ADMIN_PLANETS: AdminPlanet[];
+};
 
 export type LobbyConfigState = {
   [key in keyof LobbyInitializers]: {
@@ -342,7 +343,7 @@ export function lobbyConfigReducer(state: LobbyConfigState, action: LobbyAction)
       update = ofBoolean(action, state);
       break;
     }
-    case 'TARGET_PLANETS' : {
+    case 'TARGET_PLANETS': {
       update = ofBoolean(action, state);
       break;
     }
@@ -350,7 +351,7 @@ export function lobbyConfigReducer(state: LobbyConfigState, action: LobbyAction)
       update = ofPositiveInteger(action, state);
       break;
     }
-    case 'ADMIN_PLANETS' : {
+    case 'ADMIN_PLANETS': {
       update = ofAdminPlanets(action, state);
       break;
     }
@@ -1857,7 +1858,6 @@ export function ofAdminPlanets(
   const prevCurrentValue = state[type].currentValue;
   const prevDisplayValue = state[type].displayValue;
 
-
   if (!prevDisplayValue) {
     return {
       ...state[type],
@@ -1879,40 +1879,51 @@ export function ofAdminPlanets(
     };
   }
 
+  if (
+    value.x === undefined ||
+    value.y === undefined ||
+    value.level === undefined ||
+    value.planetType === undefined
+  ) {
+    return {
+      ...state[type],
+      warning: 'coords, level and planetType must be numbers',
+    };
+  }
+
   const currentValue = [...prevCurrentValue];
   const displayValue = [...prevDisplayValue];
 
-  if(currentValue[index]){
-
-    currentValue.splice(index, 1)
-    displayValue.splice(index, 1)
+  if (currentValue[index]) {
+    currentValue.splice(index, 1);
+    displayValue.splice(index, 1);
 
     return {
-    ...state[type],
-    currentValue,
-    displayValue,
-    warning: undefined,
-    }
-  };
+      ...state[type],
+      currentValue,
+      displayValue,
+      warning: undefined,
+    };
+  }
 
   const worldRadius = state.WORLD_RADIUS_MIN.currentValue;
   const manualSpawn = state.MANUAL_SPAWN.currentValue;
   const targetPlanet = state.TARGET_PLANETS.currentValue;
 
-  if(value.isSpawnPlanet && !manualSpawn){
+  if (value.isSpawnPlanet && !manualSpawn) {
     return {
       ...state[type],
       displayValue,
-      warning: `Cannot create spawn planets`
-    }
+      warning: `Cannot create spawn planets`,
+    };
   }
 
-  if(value.isTargetPlanet && !targetPlanet){
+  if (value.isTargetPlanet && !targetPlanet) {
     return {
       ...state[type],
       displayValue,
-      warning: `Cannot create target planets`
-    }
+      warning: `Cannot create target planets`,
+    };
   }
 
   if (Math.abs(value.x) >= worldRadius || Math.abs(value.y) > worldRadius) {

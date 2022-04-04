@@ -40,7 +40,6 @@ function generate(config: MinimapConfig): DrawMessage {
 
   const checkPlanet = (x: number, y: number) : boolean => {
     let s = Math.round((step)/2);
-    y: 0
     return !!config.planets.find(planet => x - s <= planet.x && planet.x < x + s && y - s <= planet.y && planet.y < y + s)
   }
 

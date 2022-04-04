@@ -109,13 +109,13 @@ const panes: ReadonlyArray<PaneConfig> = [
     Pane: (props: LobbiesPaneProps) => <SnarkPane {...props} />,
   },
   {
-    title: 'Target Planets',
+    title: 'Target planets',
     shortcut: `-`,
     path: '/settings/arena',
     Pane: (props: LobbiesPaneProps) => <TargetPlanetPane {...props} />,
   },
   {
-    title: 'Create Planets',
+    title: 'Admin planets',
     shortcut: `+`,
     path: '/settings/create',
     Pane: (props: LobbiesPaneProps) => <CreatePlanetPane {...props} />,
@@ -123,97 +123,6 @@ const panes: ReadonlyArray<PaneConfig> = [
 ] as const;
 
 type Status = 'creating' | 'created' | 'errored' | undefined;
-
-// function ConfigurationNavigation({
-//   error,
-//   lobbyAddress,
-//   progress,
-//   status,
-//   onCreate,
-// }: {
-//   error: string | undefined;
-//   lobbyAddress: EthAddress | undefined;
-//   progress: string;
-//   status: Status;
-//   onCreate: () => Promise<void>;
-// }) {
-//   const buttons = _.chunk(panes, 2).map(([fst, snd], idx) => {
-//     return (
-//       // Index key is fine here because the array is stable
-//       <ButtonRow key={idx}>
-//         {fst && (
-//           <LinkButton to={fst.path} shortcut={fst.shortcut}>
-//             {fst.title}
-//           </LinkButton>
-//         )}
-//         {snd && (
-//           <LinkButton to={snd.path} shortcut={snd.shortcut}>
-//             {snd.title}
-//           </LinkButton>
-//         )}
-//       </ButtonRow>
-//     );
-//   });
-
-//   const url = `${window.location.origin}/play/${lobbyAddress}`;
-
-//   let lobbyContent;
-//   if (status === 'created' && lobbyAddress) {
-//     lobbyContent = (
-//       <>
-//         <Btn size='stretch' onClick={() => createAndRevealPlanets(config, lobbyAddress as EthAddress)}>
-//           Create Planets
-//         </Btn>
-//         <Btn size='stretch' onClick={() => window.open(url)}>
-//           Launch Lobby
-//         </Btn>
-//         <Row>
-//           {/* Stealing MythicLabelText because it accepts variable text input */}
-//           <MythicLabelText style={{ margin: 'auto' }} text='Your lobby is ready!' />
-//         </Row>
-//         <Row>
-//           <span style={{ margin: 'auto' }}>
-//             You can also share the direct url with your friends:
-//           </span>
-//         </Row>
-//         {/* Didn't like the TextPreview jumping, so I'm setting the height */}
-//         <Row style={{ height: '30px' } as CSSStyleDeclaration & React.CSSProperties}>
-//           <TextPreview
-//             style={{ margin: 'auto' }}
-//             text={url}
-//             unFocusedWidth='50%'
-//             focusedWidth='100%'
-//           />
-//         </Row>
-//       </>
-//     );
-//   }
-
-//   const createDisabled = status === 'creating' || status === 'created';
-//   const creating = status === 'creating' || (status === 'created' && !lobbyAddress);
-
-//   return (
-//     <>
-//       <Title slot='title'>Customize Lobby</Title>
-//       <div>
-//         Welcome Cadet! You can launch a copy of Dark Forest from this UI. We call this a Lobby.
-//         <Spacer height={12} />
-//         All settings will be defaulted to the same configuration of the main contract you are
-//         copying. However, you can change any of those settings through the buttons below!
-//         <Spacer height={12} />
-//       </div>
-//       {buttons}
-//       <Spacer height={20} />
-//       <Btn size='stretch' onClick={onCreate} disabled={createDisabled}>
-//         {creating ? <LoadingSpinner initialText= {progress}/> : 'Create Lobby'}
-//       </Btn>
-//       <Row>
-//         <Warning>{error}</Warning>
-//       </Row>
-//       {lobbyContent}
-//     </>
-//   );
-// }
 
 export function ConfigurationPane({
   modalIndex,
