@@ -61,7 +61,9 @@ export const enum ContractEvent {
   LobbyCreated = 'LobbyCreated',
   AdminCreatePlanet = 'AdminCreatePlanet',
   TargetPlanetInvaded = 'TargetPlanetInvaded',
-  Gameover = 'Gameover'
+  Gameover = 'Gameover',
+  MoveCapChanged = "MoveCapChanged",
+  PlayerMoveCountChanged = "PlayerMoveCountChanged"
 }
 
 export const enum ContractsAPIEvent {
@@ -110,7 +112,7 @@ export const enum ContractsAPIEvent {
   PlanetClaimed = 'PlanetClaimed',
   LobbyCreated = 'LobbyCreated',
   Gameover = "Gameover",
-  MoveCapUpdated = "MoveCapChanged"
+  MoveCapChanged = "MoveCapChanged"
 }
 
 // planet locationID(BigInt), branch number

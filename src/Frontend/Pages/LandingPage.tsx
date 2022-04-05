@@ -46,6 +46,7 @@ export default function LandingPage() {
     <>
       <PrettyOverlayGradient />
       {/* <Hiring /> */}
+      <WhatsNew/>
 
       <Page>
         <Spacer height={150} />
@@ -347,23 +348,28 @@ function Hiring() {
     <Modal contain={['top', 'left', 'right']} initialX={50} initialY={50}>
       <Title slot='title'>Dark Forest is Hiring!</Title>
       <div style={{ maxWidth: '300px', textAlign: 'justify' }}>
-        We are looking for experienced full stack and solidity developers to join our team! If you
-        like what you see,{' '}
-        <Link to='https://docs.google.com/forms/d/e/1FAIpQLSdaWvjxX4TrDDLidPXtgk6UW3rC082rpvi3AIPkCPxAahg_rg/viewform?usp=sf_link'>
-          consider applying
-        </Link>
-        . If you know someone who you think would be a great fit for our team,{' '}
-        <Link to='https://docs.google.com/forms/d/e/1FAIpQLScku_bQDbkPqpHrwBzOBfQ4SV6Nw6Tgxi6zWQL8Bb0olyBE3w/viewform?usp=sf_link'>
-          please refer them here
-        </Link>
-        .
-        <br />
-        <br />
-        Learn more about the role{' '}
-        <Link to='https://ivanchub.notion.site/Dark-Forest-is-Hiring-ad1f0cbe816640fb9b4c663dacaaca04'>
-          here
-        </Link>
-        .
+        <ul>
+          <li><i>Spawn Planets</i>, which players automatically spawn on</li>
+          <li><i>Target Planets</i>, which players must invade and capture to win</li>
+          <li>A <i>move cap</i></li>
+          <li>More control over game constants like planet regen and move speed</li>
+        </ul>
+      </div>
+    </Modal>
+  );
+}
+
+function WhatsNew() {
+  return (
+    <Modal contain={['top', 'left', 'right']} initialX={50} initialY={50}>
+      <Title slot='title'>What's new:</Title>
+      <div style={{ maxWidth: '300px', textAlign: 'justify' }}>
+        <ul>
+          <li> (V0.1) <i>Spawn Planets</i>, which players automatically spawn on</li>
+          <li> (V0.1) <i>Target Planets</i>, which players must invade and capture to win</li>
+          <li> (V0.2) A move cap</li>
+          <li> (V0.2) More control over game constants like planet regen and move speed</li>
+        </ul>
       </div>
     </Modal>
   );

@@ -219,7 +219,8 @@ export class ContractsAPI extends EventEmitter {
           contract.filters.PauseStateChanged(null).topics,
           contract.filters.LobbyCreated(null, null).topics,
           contract.filters.TargetPlanetInvaded(null, null).topics,
-          contract.filters.Gameover(null).topics
+          contract.filters.Gameover(null).topics,
+          contract.filters.MoveCapChanged(null).topics
         ].map((topicsOrUndefined) => (topicsOrUndefined || [])[0]),
       ] as Array<string | Array<string>>,
     };
@@ -367,7 +368,13 @@ export class ContractsAPI extends EventEmitter {
       [ContractEvent.Gameover]: (location: EthersBN) => {
         this.emit(ContractsAPIEvent.PlanetUpdate, locationIdFromEthersBN(location));
         this.emit(ContractsAPIEvent.Gameover);
-      }
+      },
+      [ContractEvent.MoveCapChanged]: (moveCap: EthersBN) => {
+        this.emit(ContractsAPIEvent.MoveCapChanged, moveCap.toNumber());
+      },
+      [ContractEvent.PlayerMoveCountChanged]: (_playerAddress: string) => {
+        this.emit(ContractsAPIEvent.PlayerUpdate, address(_playerAddress));
+      },
     };
 
     this.ethConnection.subscribeToContractEvents(contract, eventHandlers, filter);
@@ -393,8 +400,8 @@ export class ContractsAPI extends EventEmitter {
     contract.removeAllListeners(ContractEvent.LobbyCreated);
     contract.removeAllListeners(ContractEvent.TargetPlanetInvaded);
     contract.removeAllListeners(ContractEvent.Gameover);
-
-
+    contract.removeAllListeners(ContractEvent.MoveCapChanged);
+    contract.removeAllListeners(ContractEvent.PlayerMoveCountChanged);
   }
 
   public getContractAddress(): EthAddress {

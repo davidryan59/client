@@ -332,6 +332,9 @@ class GameManager extends EventEmitter {
    */
    private moveCap: number;
 
+   public moveCap$: Monomitter<void>;
+
+
   /**
    * Emits whenever we load the network health summary from the webserver, which is derived from
    * diagnostics that the client sends up to the webserver as well.
@@ -423,8 +426,9 @@ class GameManager extends EventEmitter {
     this.moveCap = moveCap;
     this.networkHealth$ = monomitter(true);
     this.paused$ = monomitter(true);
-    this.gameover$ = monomitter(false);
+    this.gameover$ = monomitter(true);
     this.playersUpdated$ = monomitter();
+    this.moveCap$ = monomitter();
 
     if (contractConstants.CAPTURE_ZONES_ENABLED) {
       this.captureZoneGenerator = new CaptureZoneGenerator(
@@ -886,9 +890,9 @@ class GameManager extends EventEmitter {
         const newRadius = await gameManager.contractsAPI.getWorldRadius();
         gameManager.setRadius(newRadius);
       })
-      .on(ContractsAPIEvent.MoveCapUpdated, async () => {
-        const newMoveCap = await gameManager.contractsAPI.getMoveCap();
-        gameManager.setMoveCap(newMoveCap);
+      .on(ContractsAPIEvent.MoveCapChanged, async (moveCap : number) => {
+        gameManager.moveCap = moveCap;
+        gameManager.moveCap$.publish();
       })
       .on(ContractsAPIEvent.PlanetClaimed, async (player: string, planetId: LocationId) => {
         await gameManager.hardRefreshPlanet(planetId);
@@ -1294,7 +1298,7 @@ class GameManager extends EventEmitter {
   }
 
   public getMoveLimit(): number | undefined {
-    return this.contractConstants.MOVE_CAP;
+    return this.moveCap;
   }
 
   public getDefaultSpaceJunkForPlanetLevel(level: number) {
@@ -3754,6 +3758,10 @@ class GameManager extends EventEmitter {
 
   public getWinners(): string[] {
     return this.winners;
+  }
+
+  public getMoveCap(): number {
+    return this.moveCap;
   }
 }
 

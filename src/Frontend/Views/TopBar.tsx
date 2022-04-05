@@ -106,15 +106,27 @@ function Moves({ account }: { account: EthAddress | undefined }) {
       if (!account) return;
 
       setMoves(gameManager.getPlayerMoves(account) || 0);
-      setMoveLimit(gameManager.getMoveLimit() || 0);
     };
 
-    const sub = gameManager.playersUpdated$.subscribe(() => {
+    const refreshMoveLimit = () => {
+      setMoveLimit(gameManager.getMoveLimit() || 0);
+    }
+
+    const playerSub = gameManager.playersUpdated$.subscribe(() => {
       refreshMoves();
     });
     refreshMoves();
 
-    return () => sub.unsubscribe();
+    const moveSub = gameManager.moveCap$.subscribe(() => {
+      refreshMoveLimit();
+    });
+    refreshMoveLimit();
+
+    return () => {
+      playerSub.unsubscribe();
+      moveSub.unsubscribe();
+
+    }
   }, [uiManager, account]);
 
   return (
