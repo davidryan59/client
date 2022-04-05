@@ -1,6 +1,6 @@
 import { INIT_ADDRESS } from '@darkforest_eth/contracts';
 // This is loaded as URL paths by a webpack loader
-import { fakeHash, MAX_PERLIN_VALUE, mimcHash, modPBigInt, perlin } from '@darkforest_eth/hashing';
+import { fakeHash, mimcHash, modPBigInt, perlin } from '@darkforest_eth/hashing';
 // import * as snarkjs from 'snarkjs';
 import revealCircuitPath from '@darkforest_eth/snarks/reveal.wasm';
 import revealZkeyPath from '@darkforest_eth/snarks/reveal.zkey';
@@ -13,7 +13,7 @@ import {
   SnarkJSProofAndSignals,
 } from '@darkforest_eth/snarks';
 
-import arenaInitContractAbiUrl from '@darkforest_eth/contracts/abis/DFArenaInitialize.json';
+import arenaInitContractAbiUrl from '@darkforest_eth/contracts/abis/DFArenaUpgradeInitialize.json';
 
 import { EthConnection } from '@darkforest_eth/network';
 import { address } from '@darkforest_eth/serde';
@@ -189,6 +189,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             TARGET_PLANET_HOLD_BLOCKS_REQUIRED: config.TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
             MANUAL_SPAWN: config.MANUAL_SPAWN,
             ADMIN_PLANETS: [],
+            MOVE_CAP_ENABLED: config.MOVE_CAP_ENABLED,
+            MOVE_CAP : config.MOVE_CAP
           });
         })
         .catch((e) => {

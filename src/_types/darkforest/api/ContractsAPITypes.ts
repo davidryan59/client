@@ -174,8 +174,6 @@ export type PlanetTypeWeightsBySpaceType = [
 
 export interface ContractConstants {
   ADMIN_CAN_ADD_PLANETS: boolean;
-  MANUAL_SPAWN: boolean;
-  TARGET_PLANETS: boolean;
   WORLD_RADIUS_LOCKED: boolean;
   WORLD_RADIUS_MIN: number;
 
@@ -313,7 +311,14 @@ export interface ContractConstants {
   ];
   CAPTURE_ZONE_HOLD_BLOCKS_REQUIRED: number;
   CAPTURE_ZONES_PER_5000_WORLD_RADIUS: number;
+
+  // Arena Mode
+  TARGET_PLANETS: boolean;
   TARGET_PLANET_HOLD_BLOCKS_REQUIRED: number;
+  MANUAL_SPAWN: boolean;
+
+  MOVE_CAP_ENABLED: boolean;
+  MOVE_CAP: number;
 }
 
 export type ClientMockchainData =

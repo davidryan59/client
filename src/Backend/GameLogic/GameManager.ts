@@ -1275,6 +1275,15 @@ class GameManager extends EventEmitter {
     return player?.spaceJunkLimit;
   }
 
+  public getPlayerMoves(addr: EthAddress): number | undefined {
+    const player = this.players.get(addr);
+    return player?.moves;
+  }
+
+  public getMoveLimit(): number | undefined {
+    return this.contractConstants.MOVE_CAP;
+  }
+
   public getDefaultSpaceJunkForPlanetLevel(level: number) {
     return this.contractConstants.PLANET_LEVEL_JUNK[level];
   }

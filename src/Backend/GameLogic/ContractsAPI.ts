@@ -451,13 +451,15 @@ export class ContractsAPI extends EventEmitter {
     const {
       MANUAL_SPAWN,
       TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
-      TARGET_PLANETS
+      TARGET_PLANETS,
+      MOVE_CAP_ENABLED
     } = await this.makeCall(this.contract.getArenaConstants);
 
     const TOKEN_MINT_END_SECONDS = (
       await this.makeCall(this.contract.TOKEN_MINT_END_TIMESTAMP)
     ).toNumber();
 
+    const MOVE_CAP = (await this.makeCall(this.contract.getMoveCap)).toNumber();
     const adminAddress = address(await this.makeCall(this.contract.adminAddress));
 
     const upgrades = decodeUpgradeBranches(await this.makeCall(this.contract.getUpgrades));
@@ -577,7 +579,10 @@ export class ContractsAPI extends EventEmitter {
 
       TARGET_PLANETS: TARGET_PLANETS,
       TARGET_PLANET_HOLD_BLOCKS_REQUIRED: TARGET_PLANET_HOLD_BLOCKS_REQUIRED.toNumber(),
-      MANUAL_SPAWN: MANUAL_SPAWN
+      MANUAL_SPAWN: MANUAL_SPAWN,
+
+      MOVE_CAP_ENABLED: MOVE_CAP_ENABLED,
+      MOVE_CAP : MOVE_CAP
     };
 
     return constants;
@@ -588,25 +593,42 @@ export class ContractsAPI extends EventEmitter {
   ): Promise<Map<string, Player>> {
     const nPlayers: number = (await this.makeCall<EthersBN>(this.contract.getNPlayers)).toNumber();
 
-    const players = await aggregateBulkGetter<Player>(
+    const rawPlayers = await aggregateBulkGetter(
       nPlayers,
       200,
       async (start, end) =>
-        (await this.makeCall(this.contract.bulkGetPlayers, [start, end])).map(decodePlayer),
+        (await this.makeCall(this.contract.bulkGetPlayers, [start, end])),
+      onProgress
+    );
+
+    const arenaPlayers = await aggregateBulkGetter(
+      nPlayers,
+      200,
+      async (start, end) =>
+        (await this.makeCall(this.contract.bulkGetArenaPlayers, [start, end])),
       onProgress
     );
 
     const playerMap: Map<EthAddress, Player> = new Map();
-    for (const player of players) {
-      playerMap.set(player.address, player);
+
+    for(let i = 0; i < nPlayers; i++){
+      if(!!rawPlayers) {
+        const player = decodePlayer(
+          rawPlayers[i],
+          arenaPlayers[i]
+        )
+        playerMap.set(player.address, player);
+      }
     }
     return playerMap;
   }
 
   public async getPlayerById(playerId: EthAddress): Promise<Player | undefined> {
     const rawPlayer = await this.makeCall(this.contract.players, [playerId]);
+    const arenaPlayer = await this.makeCall(this.contract.arenaPlayers, [playerId]);
+
     if (!rawPlayer.isInitialized) return undefined;
-    const player = decodePlayer(rawPlayer);
+    const player = decodePlayer(rawPlayer, arenaPlayer);
 
     return player;
   }

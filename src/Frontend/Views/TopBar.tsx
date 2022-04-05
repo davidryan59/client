@@ -92,6 +92,47 @@ function SpaceJunk({ account }: { account: EthAddress | undefined }) {
   );
 }
 
+function Moves({ account }: { account: EthAddress | undefined }) {
+  const uiManager = useUIManager();
+
+  const [moves, setMoves] = useState<number>(0);
+  const [moveLimit, setMoveLimit] = useState<number>(0);
+
+  useEffect(() => {
+    if (!uiManager) return;
+    const gameManager = uiManager.getGameManager();
+
+    const refreshMoves = () => {
+      if (!account) return;
+
+      setMoves(gameManager.getPlayerMoves(account) || 0);
+      setMoveLimit(gameManager.getMoveLimit() || 0);
+    };
+
+    const sub = gameManager.playersUpdated$.subscribe(() => {
+      refreshMoves();
+    });
+    refreshMoves();
+
+    return () => sub.unsubscribe();
+  }, [uiManager, account]);
+
+  return (
+    <Numbers>
+      <Sub>
+        <TooltipTrigger name={TooltipName.Empty}
+         extraContent = {<Text>Your number of moves. Once you reach the limit, you will not be able to make another move!</Text>}
+        >
+          Moves:{' '}
+          <Text>
+            {moves} / {moveLimit}
+          </Text>
+        </TooltipTrigger>
+      </Sub>
+    </Numbers>
+  );
+}
+
 function CaptureZoneExplanation() {
   const uiManager = useUIManager();
 
@@ -228,6 +269,11 @@ export function TopBar({ twitterVerifyHook }: { twitterVerifyHook: Hook<boolean>
         {uiManager.getSpaceJunkEnabled() && (
           <>
             <SpaceJunk account={account} />
+          </>
+        )}
+        {uiManager.getMoveCapEnabled() && (
+          <>
+            <Moves account={account} />
           </>
         )}
       </AlignCenterHorizontally>

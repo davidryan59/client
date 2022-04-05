@@ -126,6 +126,12 @@ export type LobbyConfigAction =
       type: 'ADMIN_PLANETS';
       value: AdminPlanet | undefined;
       index: number;
+    }| {
+      type: 'MOVE_CAP_ENABLED';
+      value: Initializers['MOVE_CAP_ENABLED'] | undefined;
+    }| {
+      type: 'MOVE_CAP';
+      value: Initializers['MOVE_CAP'] | undefined;
     };
 
 
@@ -353,6 +359,14 @@ export function lobbyConfigReducer(state: LobbyConfigState, action: LobbyAction)
     }
     case 'ADMIN_PLANETS': {
       update = ofAdminPlanets(action, state);
+      break;
+    }
+    case 'MOVE_CAP_ENABLED': {
+      update = ofBoolean(action, state);
+      break;
+    }
+    case 'MOVE_CAP': {
+      update = ofPositiveInteger(action, state);
       break;
     }
     case 'RESET': {
@@ -822,8 +836,7 @@ export function lobbyConfigInit(startingConfig: LobbyInitializers) {
         break;
       }
       case 'MANUAL_SPAWN': {
-        // Default this to false if we don't have it
-        const defaultValue = startingConfig[key] || false;
+        const defaultValue = startingConfig[key];
         state[key] = {
           currentValue: defaultValue,
           displayValue: defaultValue,
@@ -833,8 +846,7 @@ export function lobbyConfigInit(startingConfig: LobbyInitializers) {
         break;
       }
       case 'TARGET_PLANETS': {
-        // Default this to false if we don't have it
-        const defaultValue = startingConfig[key] || false;
+        const defaultValue = startingConfig[key];
         state[key] = {
           currentValue: defaultValue,
           displayValue: defaultValue,
@@ -856,6 +868,28 @@ export function lobbyConfigInit(startingConfig: LobbyInitializers) {
       case 'ADMIN_PLANETS': {
         // Default this to false if we don't have it
         const defaultValue = startingConfig[key] || [];
+        state[key] = {
+          currentValue: defaultValue,
+          displayValue: defaultValue,
+          defaultValue,
+          warning: undefined,
+        };
+        break;
+      }
+      case 'MOVE_CAP': {
+        // Default this to false if we don't have it
+        const defaultValue = startingConfig[key];
+        state[key] = {
+          currentValue: defaultValue,
+          displayValue: defaultValue,
+          defaultValue,
+          warning: undefined,
+        };
+        break;
+      }
+      case 'MOVE_CAP_ENABLED': {
+        // Default this to false if we don't have it
+        const defaultValue = startingConfig[key];
         state[key] = {
           currentValue: defaultValue,
           displayValue: defaultValue,
