@@ -638,6 +638,11 @@ export class ContractsAPI extends EventEmitter {
     return radius;
   }
 
+  public async getMoveCap(): Promise<number> {
+    const moveCap = (await this.makeCall<EthersBN>(this.contract.getMoveCap)).toNumber();
+    return moveCap;
+  }
+
   // timestamp since epoch (in seconds)
   public async getTokenMintEndTimestamp(): Promise<number> {
     const timestamp = (

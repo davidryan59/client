@@ -44,6 +44,7 @@ export interface InitialGameState {
   gameover: boolean;
   // countdown: number | undefined;
   winners: string[];
+  moveCap : number;
 
 }
 
@@ -90,6 +91,8 @@ export class InitialGameStateDownloader {
 
     const contractConstants = contractsAPI.getConstants();
     const worldRadius = contractsAPI.getWorldRadius();
+
+    const moveCap = contractsAPI.getMoveCap();
 
     const players = contractsAPI.getPlayers(playersLoadingBar);
 
@@ -208,7 +211,8 @@ export class InitialGameStateDownloader {
       paused: await paused,
       gameover : await gameover,
       // countdown,
-      winners : await winners
+      winners : await winners,
+      moveCap : await moveCap
     };
 
     return initialState;

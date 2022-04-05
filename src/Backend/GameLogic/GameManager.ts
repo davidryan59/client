@@ -325,6 +325,12 @@ class GameManager extends EventEmitter {
    * @todo move this into a new `GameConfiguration` class.
    */
   private worldRadius: number;
+  /**
+   * Admin can change the move cap
+   *
+   * @todo move this into a new `GameConfiguration` class.
+   */
+   private moveCap: number;
 
   /**
    * Emits whenever we load the network health summary from the webserver, which is derived from
@@ -389,6 +395,7 @@ class GameManager extends EventEmitter {
     // countdownStart: number | undefined
     gameover: boolean,
     winners: string[],
+    moveCap: number,
   ) {
     super();
 
@@ -413,6 +420,7 @@ class GameManager extends EventEmitter {
     this.worldRadius = worldRadius;
     this.gameover = gameover;
     this.winners = winners;
+    this.moveCap = moveCap;
     this.networkHealth$ = monomitter(true);
     this.paused$ = monomitter(true);
     this.gameover$ = monomitter(false);
@@ -695,7 +703,8 @@ class GameManager extends EventEmitter {
       connection,
       initialState.paused,
       initialState.gameover,
-      initialState.winners
+      initialState.winners,
+      initialState.moveCap
     );
 
     gameManager.setPlayerTwitters(initialState.twitters);
@@ -876,6 +885,10 @@ class GameManager extends EventEmitter {
       .on(ContractsAPIEvent.RadiusUpdated, async () => {
         const newRadius = await gameManager.contractsAPI.getWorldRadius();
         gameManager.setRadius(newRadius);
+      })
+      .on(ContractsAPIEvent.MoveCapUpdated, async () => {
+        const newMoveCap = await gameManager.contractsAPI.getMoveCap();
+        gameManager.setMoveCap(newMoveCap);
       })
       .on(ContractsAPIEvent.PlanetClaimed, async (player: string, planetId: LocationId) => {
         await gameManager.hardRefreshPlanet(planetId);
@@ -1695,6 +1708,10 @@ class GameManager extends EventEmitter {
     if (this.minerManager) {
       this.minerManager.setRadius(this.worldRadius);
     }
+  }
+
+  private setMoveCap(moveCap: number) {
+    this.moveCap = moveCap;
   }
 
   private async setGameover(gameover: boolean) {
