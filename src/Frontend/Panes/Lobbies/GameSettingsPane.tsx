@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 import {
   Checkbox,
@@ -5,11 +6,59 @@ import {
   DarkForestNumberInput,
   NumberInput,
 } from '../../Components/Input';
+import { ModifierType } from '@darkforest_eth/types';
 import { Row } from '../../Components/Row';
 import { DarkForestSlider, Slider } from '../../Components/Slider';
+import { Sub } from '../../Components/Text';
 import { LobbiesPaneProps, Warning } from './LobbiesUtils';
+import { ModifierText } from '../../Components/Labels/ModifierLabels';
+
+const rowChunkSize = 3;
+const rowStyle = { gap: '8px' } as CSSStyleDeclaration & React.CSSProperties;
+const itemStyle = { flex: `1 1 ${Math.floor(100 / rowChunkSize)}%` };
+
+function WorldConstants({
+  index,
+  value,
+  name,
+  onUpdate,
+}: LobbiesPaneProps & { name : string; value: number | undefined; index: number }) {
+  // The level 0 value can never change
+    return (
+      <div style={itemStyle}>
+        <ModifierText modifier = {index as ModifierType}/>
+        <NumberInput
+          format='integer'
+          value={value}
+          onChange={(e: Event & React.ChangeEvent<DarkForestNumberInput>) => {
+            onUpdate({ type: 'MULTIPLIERS', index, value: e.target.value });
+          }}
+        />
+      </div>
+    );
+}
 
 export function GameSettingsPane({ config, onUpdate }: LobbiesPaneProps) {
+
+  let worldConstants =  _.chunk(config.MULTIPLIERS.displayValue, rowChunkSize).map(
+    (items, rowIdx) => {
+      return (
+        <Row key={`threshold-row-${rowIdx}`} style={rowStyle}>
+          {items.map((item, idx) => (
+            <WorldConstants
+              key={`threshold-lvl-${idx}`}
+              config={config}
+              name = {item?.toString() || "none"}
+              value={item}
+              index={rowIdx * rowChunkSize + idx}
+              onUpdate={onUpdate}
+            />
+          ))}
+        </Row>
+      );
+    }
+  );
+
   return (
     <>
       <Row>
@@ -25,6 +74,13 @@ export function GameSettingsPane({ config, onUpdate }: LobbiesPaneProps) {
             onUpdate({ type: 'TIME_FACTOR_HUNDREDTHS', value: e.target.value });
           }}
         />
+      </Row>
+      <Row>
+        <span>Advanced: Modify game constants</span>
+      </Row>
+      {worldConstants}
+      <Row>
+        <Warning>{config.MULTIPLIERS.warning}</Warning>
       </Row>
       <Row>
         <Warning>{config.TIME_FACTOR_HUNDREDTHS.warning}</Warning>

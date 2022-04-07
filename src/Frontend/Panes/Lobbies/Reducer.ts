@@ -126,14 +126,20 @@ export type LobbyConfigAction =
       type: 'ADMIN_PLANETS';
       value: AdminPlanet | undefined;
       index: number;
-    }| {
+    }
+  | {
       type: 'MOVE_CAP_ENABLED';
       value: Initializers['MOVE_CAP_ENABLED'] | undefined;
-    }| {
+    }
+  | {
       type: 'MOVE_CAP';
       value: Initializers['MOVE_CAP'] | undefined;
+    }
+  | {
+      type: 'MULTIPLIERS';
+      index: number;
+      value: number | undefined;
     };
-
 
 export type AdminPlanet = {
   x: number;
@@ -367,6 +373,10 @@ export function lobbyConfigReducer(state: LobbyConfigState, action: LobbyAction)
     }
     case 'MOVE_CAP': {
       update = ofPositiveInteger(action, state);
+      break;
+    }
+    case 'MULTIPLIERS': {
+      update = ofMultipliers(action, state);
       break;
     }
     case 'RESET': {
@@ -888,6 +898,17 @@ export function lobbyConfigInit(startingConfig: LobbyInitializers) {
         break;
       }
       case 'MOVE_CAP_ENABLED': {
+        // Default this to false if we don't have it
+        const defaultValue = startingConfig[key];
+        state[key] = {
+          currentValue: defaultValue,
+          displayValue: defaultValue,
+          defaultValue,
+          warning: undefined,
+        };
+        break;
+      }
+      case 'MULTIPLIERS': {
         // Default this to false if we don't have it
         const defaultValue = startingConfig[key];
         state[key] = {
@@ -1986,6 +2007,65 @@ export function ofAdminPlanets(
 
   currentValue[index] = value;
   displayValue[index] = value;
+
+  return {
+    ...state[type],
+    currentValue,
+    displayValue,
+    warning: undefined,
+  };
+}
+export function ofMultipliers(
+  { type, index, value }: Extract<LobbyConfigAction, { type: 'MULTIPLIERS' }>,
+  state: LobbyConfigState
+) {
+  const prevCurrentValue = state[type].currentValue;
+  const prevDisplayValue = state[type].displayValue;
+
+  if (!prevDisplayValue) {
+    return {
+      ...state[type],
+      warning: `Failed to update ${type}`,
+    };
+  }
+
+  if (value === undefined) {
+    return {
+      ...state[type],
+      warning: undefined,
+    };
+  }
+
+  const currentValue = [...prevCurrentValue];
+  const displayValue = [...prevDisplayValue];
+
+  displayValue[index] = value;
+
+  if (typeof value !== 'number') {
+    return {
+      ...state[type],
+      displayValue,
+      warning: `Value must be a number`,
+    };
+  }
+
+  if (value < 0) {
+    return {
+      ...state[type],
+      displayValue,
+      warning: `Value must be positive`,
+    };
+  }
+
+  if (value > SAFE_UPPER_BOUNDS) {
+    return {
+      ...state[type],
+      displayValue,
+      warning: `Value is too large`,
+    };
+  }
+
+  currentValue[index] = value;
 
   return {
     ...state[type],

@@ -190,7 +190,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             MANUAL_SPAWN: config.MANUAL_SPAWN,
             ADMIN_PLANETS: [],
             MOVE_CAP_ENABLED: config.MOVE_CAP_ENABLED,
-            MOVE_CAP : config.MOVE_CAP
+            MOVE_CAP : config.MOVE_CAP,
+            MULTIPLIERS: config.MULTIPLIERS
           });
         })
         .catch((e) => {

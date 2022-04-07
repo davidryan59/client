@@ -459,7 +459,8 @@ export class ContractsAPI extends EventEmitter {
       MANUAL_SPAWN,
       TARGET_PLANET_HOLD_BLOCKS_REQUIRED,
       TARGET_PLANETS,
-      MOVE_CAP_ENABLED
+      MOVE_CAP_ENABLED,
+      MULTIPLIERS
     } = await this.makeCall(this.contract.getArenaConstants);
 
     const TOKEN_MINT_END_SECONDS = (
@@ -589,7 +590,17 @@ export class ContractsAPI extends EventEmitter {
       MANUAL_SPAWN: MANUAL_SPAWN,
 
       MOVE_CAP_ENABLED: MOVE_CAP_ENABLED,
-      MOVE_CAP : MOVE_CAP
+      MOVE_CAP: MOVE_CAP,
+      MULTIPLIERS : [
+        MULTIPLIERS[0].toNumber(),
+        MULTIPLIERS[1].toNumber(),
+        MULTIPLIERS[2].toNumber(),
+        MULTIPLIERS[3].toNumber(),
+        MULTIPLIERS[4].toNumber(),
+        MULTIPLIERS[5].toNumber(),
+        MULTIPLIERS[6].toNumber(),
+
+      ]
     };
 
     return constants;
