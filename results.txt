@@ -1,0 +1,59 @@
+test results
+
+Gnosis
+
+Provider Polling Interval 8000
+raw avg 7743.349999904633 ms normal avg 5828.449999928474 ms
+raw avg 7916.900000095367 ms normal avg 4110.450000047684 ms
+raw avg 5794.200000047684 ms normal avg 5767.250000119209 ms
+
+Provider Polling Interval 1000
+raw avg 3872.649999976158 ms normal avg 3177.899999976158 ms
+raw avg 4368.699999928474 ms normal avg 3015.3000000715256 ms
+
+
+
+Gnosis Optimism
+
+Provider Polling Interval 8000
+raw avg 3850.4499999284744 ms normal avg 2553.4499999284744 ms
+raw avg 2639.5500000715256 ms normal avg 1403.5499999523163 ms
+raw avg 278.85000002384186 ms normal avg 2620.3000000715256 ms
+raw avg 6022.799999952316 ms normal avg 2624.4000000953674 ms
+raw avg 4887.549999952316 ms normal avg 2608.350000023842 ms
+raw avg 7096.199999928474 ms normal avg 1414.3000000715256 ms
+
+{
+    "normal_avg_ms": "5587.90",
+    "raw_avg_ms": "1819.10",
+    "polling_interval": 1000,
+    "rpc": "https://optimism.gnosischain.com"
+}
+
+{
+    "normal_avg_ms": "5589.70",
+    "raw_avg_ms": "1616.10",
+    "polling_interval": 1000,
+    "rpc": "https://optimism.gnosischain.com"
+}
+{
+    "normal_avg_ms": "5227.25",
+    "raw_avg_ms": "1825.95",
+    "polling_interval": 8000,
+    "rpc": "https://optimism.gnosischain.com"
+}
+{
+    "normal_avg_ms": "6504.05",
+    "raw_avg_ms": "1787.25",
+    "polling_interval": 1000,
+    "rpc": "https://optimism.gnosischain.com"
+}
+
+Websocket RPC
+
+{
+    "normal_avg_ms": "4856.00",
+    "raw_avg_ms": "2114.40",
+    "polling_interval": 0,
+    "rpc": "wss://optimism.gnosischain.com/wss"
+}
