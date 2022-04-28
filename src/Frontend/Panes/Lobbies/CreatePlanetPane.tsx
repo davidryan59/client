@@ -21,6 +21,8 @@ import { InvalidConfigError, toInitializers } from './Reducer';
 
 const jcFlexEnd = { display: 'flex', justifyContent: 'flex-end' } as CSSStyleDeclaration &
   React.CSSProperties;
+const jcSpaceEvenly = { display: 'flex', justifyContent: 'space-evenly' } as CSSStyleDeclaration &
+  React.CSSProperties;
 const rowChunkSize = 4;
 const rowStyle = { gap: '8px' } as CSSStyleDeclaration & React.CSSProperties;
 // Handling the non-input lvl 0 by calculating the items in the row
@@ -29,12 +31,6 @@ const itemStyle = { flex: `1 1 ${Math.floor(100 / rowChunkSize)}%` };
 const TableContainer = styled.div`
   overflow-y: scroll;
   width: 100%;
-`;
-
-const StageContainer = styled.div`
-  background: #191919;
-  border-radius: 3px;
-  padding: 8px;
 `;
 
 const displayProperties = [
@@ -92,7 +88,7 @@ export function CreatePlanetPane({
     (planet: AdminPlanet) => formatBool(planet.isTargetPlanet),
     (planet: AdminPlanet) => formatBool(planet.isSpawnPlanet),
     (planet: AdminPlanet, i: number) => (
-      <div style={{ ...jcFlexEnd, ...rowStyle }}>
+      <div style={jcSpaceEvenly}>
         <Btn disabled={!lobbyAdminTools} onClick={async () => await createAndRevealPlanet(i)}>
           ✓
         </Btn>
@@ -104,25 +100,17 @@ export function CreatePlanetPane({
   function StagedPlanets({ config }: LobbiesPaneProps) {
     const adminPlanets = config.ADMIN_PLANETS.currentValue;
     return adminPlanets && adminPlanets.length > 0 ? (
-      <>
-        <Row>Staged Planets</Row>
-        <Row>
-          <TableContainer>
-            <Table
-              paginated={true}
-              rows={adminPlanets || []}
-              headers={headers}
-              columns={columns}
-              alignments={alignments}
-              itemsPerPage={5}
-            />
-          </TableContainer>
-        </Row>
-      </>
+      <TableContainer>
+        <Table
+          paginated={true}
+          rows={adminPlanets || []}
+          headers={headers}
+          columns={columns}
+          alignments={alignments}
+        />
+      </TableContainer>
     ) : (
-      <Row>
-        <Sub>No planets staged</Sub>
-      </Row>
+      <Sub>No planets staged</Sub>
     );
   }
 
@@ -166,25 +154,17 @@ export function CreatePlanetPane({
 
   function CreatedPlanets({ planets }: { planets: CreatedPlanet[] | undefined }) {
     return planets?.length ? (
-      <>
-        <Row>Created Planets</Row>
-        <Row>
-          <TableContainer>
-            <Table
-              paginated={true}
-              rows={planets || []}
-              headers={createdPlanetHeaders}
-              columns={createdPlanetColumns}
-              alignments={alignments}
-              itemsPerPage={5}
-            />
-          </TableContainer>
-        </Row>
-      </>
+      <TableContainer>
+        <Table
+          paginated={true}
+          rows={planets || []}
+          headers={createdPlanetHeaders}
+          columns={createdPlanetColumns}
+          alignments={alignments}
+        />
+      </TableContainer>
     ) : (
-      <Row>
-        <Sub>No planets created</Sub>
-      </Row>
+      <Sub>No planets created</Sub>
     );
   }
 
@@ -239,9 +219,33 @@ export function CreatePlanetPane({
     setError(undefined);
     if (!config.ADMIN_PLANETS.displayValue) return;
 
-    for (let i = config.ADMIN_PLANETS.displayValue.length - 1; i >= 0; i--) {
-      await createAndRevealPlanet(i);
+    const testBulk = true;
+    if(testBulk) {
+      await bulkCreateAndRevealPlanets();
     }
+    else {
+      for (let i = config.ADMIN_PLANETS.displayValue.length - 1; i >= 0; i--) {
+        await createAndRevealPlanet(i);
+      }
+    }
+  }
+
+  async function bulkCreateAndRevealPlanets() {
+    try {
+      if (!config.ADMIN_PLANETS.displayValue) return;
+
+      var adminPlanets: AdminPlanet[] = [];
+  
+      config.ADMIN_PLANETS.displayValue.map(p => {
+        if(p) adminPlanets.push(p);
+      })
+  
+      await lobbyAdminTools?.bulkCreateAndReveal(adminPlanets, toInitializers(config));
+    } catch (error) {
+      console.log('bulk create and reveal errored', error);
+      
+    }
+
   }
 
   async function createAndRevealPlanet(index: number) {
@@ -265,6 +269,8 @@ export function CreatePlanetPane({
       if (elem.revealLocation) {
         await lobbyAdminTools.revealPlanet(elem, initializers);
       }
+
+      console.log()
 
       onUpdate({ type: 'ADMIN_PLANETS', value: planet, index: index });
       setStatus('created');
@@ -300,13 +306,13 @@ export function CreatePlanetPane({
               </Sub>
             </Row>
           )}
-          <StageContainer>
+          <Row>
             <span>Stage Custom Planets</span>
             <Btn style={jcFlexEnd} onClick={stagePlanet}>
               Stage Planet
             </Btn>
-            {adminPlanetElems}
-          </StageContainer>
+          </Row>
+          {adminPlanetElems}
           <Row>
             <Warning>{config.ADMIN_PLANETS.warning}</Warning>
           </Row>
@@ -314,17 +320,28 @@ export function CreatePlanetPane({
             <Warning>{error}</Warning>
           </Row>
           <br />
-          <StagedPlanets config={config} onUpdate={onUpdate} />
+          <Row>
+            <span>Staged Planets</span>
+          </Row>
+          <Row>
+            <StagedPlanets config={config} onUpdate={onUpdate} />
+          </Row>
           {config.ADMIN_PLANETS.displayValue && config.ADMIN_PLANETS.displayValue.length > 0 && (
             <Btn
-              size='stretch'
+              style={jcFlexEnd}
               disabled={status == 'creating' || !lobbyAdminTools}
               onClick={createAll}
             >
-              {status == 'creating' ? <LoadingSpinner initialText='Adding...' /> : `Add All`}
+              {' '}
+              {status == 'creating' ? <LoadingSpinner initialText='Adding...' /> : ` Add all `}
             </Btn>
           )}
-          <CreatedPlanets planets={createdPlanets} />
+          <Row>
+            <span>Created Planets</span>
+          </Row>
+          <Row>
+            <CreatedPlanets planets={createdPlanets} />
+          </Row>
         </>
       ) : (
         <Sub>Enable admin planets (in admin permissions) to continue</Sub>

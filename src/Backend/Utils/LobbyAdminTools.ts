@@ -5,7 +5,7 @@ import {
   fakeProof,
   RevealSnarkContractCallArgs,
   RevealSnarkInput,
-  SnarkJSProofAndSignals
+  SnarkJSProofAndSignals,
 } from '@darkforest_eth/snarks';
 import revealCircuitPath from '@darkforest_eth/snarks/reveal.wasm';
 import revealZkeyPath from '@darkforest_eth/snarks/reveal.zkey';
@@ -17,7 +17,7 @@ import {
   UnconfirmedCreateArenaPlanet,
   UnconfirmedReveal,
   WorldCoords,
-  WorldLocation
+  WorldLocation,
 } from '@darkforest_eth/types';
 import { BigNumberish } from 'ethers';
 import { LobbyInitializers } from '../../Frontend/Panes/Lobbies/Reducer';
@@ -41,9 +41,10 @@ export type CreatedPlanet = {
   requireValidLocationId: boolean;
   revealLocation: boolean;
   isTargetPlanet: boolean;
-  isSpawnPlanet: boolean;  createTx : string | undefined;
-  revealTx : string | undefined;
-}
+  isSpawnPlanet: boolean;
+  createTx: string | undefined;
+  revealTx: string | undefined;
+};
 
 export class LobbyAdminTools {
   private readonly lobbyAddress: EthAddress;
@@ -130,8 +131,7 @@ export class LobbyAdminTools {
     });
 
     await tx.confirmedPromise;
-    this.createdPlanets.push({...planet, createTx : tx?.hash, revealTx : undefined});
-
+    this.createdPlanets.push({ ...planet, createTx: tx?.hash, revealTx: undefined });
   }
 
   async revealPlanet(planet: AdminPlanet, initializers: LobbyInitializers) {
@@ -161,7 +161,7 @@ export class LobbyAdminTools {
     const txIntent: UnconfirmedReveal = {
       methodName: ContractMethodName.REVEAL_LOCATION,
       contract: this.contract.contract,
-      locationId: location.toString() as LocationId,
+      locationId: location.toString() as LocationId, 
       location: worldLocation,
       args: getArgs(),
     };
@@ -172,8 +172,8 @@ export class LobbyAdminTools {
 
     await tx.confirmedPromise;
     console.log(`reveal tx accepted`);
-    const createdPlanet = this.createdPlanets.find(p => p.x == planet.x && p.y == planet.y);
-    if(!createdPlanet) throw("created planet not found");
+    const createdPlanet = this.createdPlanets.find((p) => p.x == planet.x && p.y == planet.y);
+    if (!createdPlanet) throw 'created planet not found';
     createdPlanet.revealTx = tx?.hash;
   }
 
@@ -228,6 +228,50 @@ export class LobbyAdminTools {
 
       return buildContractCallArgs(proof, publicSignals) as RevealSnarkContractCallArgs;
     }
+  }
+
+  async bulkCreateAndReveal(planets: AdminPlanet[], initializers: LobbyInitializers) {
+    console.log(`testing bulk create and reveal`);
+    // make create Planet args
+    const createPlanetArgsList = planets.map((p) => {
+      const planetData = this.generatePlanetData(p, initializers);
+      return {
+        location: planetData.location,
+        perlin: planetData.perlinValue,
+        level: p.level,
+        planetType: p.planetType,
+        requireValidLocationId: p.requireValidLocationId,
+        isTargetPlanet: p.isTargetPlanet,
+        isSpawnPlanet: p.isSpawnPlanet,
+      };
+    });
+
+    const revealData = await Promise.all(planets.map(async p => {
+      const revealArgs = await this.makeRevealProof(
+        p.x,
+        p.y,
+        initializers.PLANETHASH_KEY,
+        initializers.SPACETYPE_KEY,
+        initializers.PERLIN_LENGTH_SCALE,
+        initializers.PERLIN_MIRROR_X,
+        initializers.PERLIN_MIRROR_Y,
+        initializers.DISABLE_ZK_CHECKS,
+        initializers.PLANET_RARITY
+      );
+
+      return {
+        _a: revealArgs[0],
+        _b: revealArgs[1],
+        _c: revealArgs[2],
+        _input: revealArgs[3],
+      };
+    }));
+    
+    const tx = await this.contract.contract.bulkCreateAndReveal(createPlanetArgsList, revealData);
+    const rct = await tx.wait();
+    console.log(`created and revealed ${planets.length} with ${rct.gasUsed} gas used`)
+
+    console.log('num spawn planets', await this.contract.contract.getNSpawnPlanets());
   }
 
   async whitelistPlayer(address: EthAddress) {
