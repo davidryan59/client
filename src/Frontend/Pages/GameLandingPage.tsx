@@ -13,7 +13,11 @@ import GameManager, { GameManagerEvent } from '../../Backend/GameLogic/GameManag
 import GameUIManager from '../../Backend/GameLogic/GameUIManager';
 import TutorialManager, { TutorialState } from '../../Backend/GameLogic/TutorialManager';
 import { addAccount, getAccounts } from '../../Backend/Network/AccountManager';
-import { getEthConnection, loadDiamondContract, loadFaucetContract } from '../../Backend/Network/Blockchain';
+import {
+  getEthConnection,
+  loadDiamondContract,
+  loadFaucetContract,
+} from '../../Backend/Network/Blockchain';
 import {
   callRegisterAndWaitForConfirmation,
   EmailResponse,
@@ -422,11 +426,14 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
     },
     [ethConnection]
   );
-  
+
   const advanceStateFromAccountSet = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       terminal.current?.println(``);
-      terminal.current?.println(`Would you like to play or spectate this game?`, TerminalTextStyle.Sub);
+      terminal.current?.println(
+        `Would you like to play or spectate this game?`,
+        TerminalTextStyle.Sub
+      );
 
       terminal.current?.print('(a) ', TerminalTextStyle.Sub);
       terminal.current?.println(`Play.`);
@@ -444,58 +451,61 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
         terminal.current?.println('Unrecognized input. Please try again.');
         await advanceStateFromAccountSet(terminal);
       }
-    },[]);
+    },
+    []
+  );
 
   const advanceStateFromSpectating = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
-        let newGameManager: GameManager;
-        try {
-          const playerAddress = ethConnection?.getAddress();
-          if (!playerAddress || !ethConnection) throw new Error('not logged in');
+      let newGameManager: GameManager;
+      try {
+        const playerAddress = ethConnection?.getAddress();
+        if (!playerAddress || !ethConnection) throw new Error('not logged in');
 
-          newGameManager = await GameManager.create({
-            connection: ethConnection,
-            terminal,
-            contractAddress,
-            spectator : true
-          });
-        } catch (e) {
-          console.error(e);
-  
-          setStep(TerminalPromptStep.ERROR);
-  
-          terminal.current?.print(
-            'Network under heavy load. Please refresh the page, and check ',
-            TerminalTextStyle.Red
-          );
-  
-          terminal.current?.printLink(
-            'https://blockscout.com/poa/xdai/optimism',
-            () => {
-              window.open('https://blockscout.com/xdai/optimism');
-            },
-            TerminalTextStyle.Red
-          );
-  
-          terminal.current?.println('');
-  
-          return;
-        }
-  
-        setGameManager(newGameManager);
-  
-        window.df = newGameManager;
-  
-        const newGameUIManager = await GameUIManager.create(newGameManager, terminal);
-  
-        window.ui = newGameUIManager;
-  
-        terminal.current?.newline();
-        terminal.current?.println('Connected to Dark Forest Contract');
-        gameUIManagerRef.current = newGameUIManager;
-        setStep(TerminalPromptStep.ALL_CHECKS_PASS);
-    },[ethConnection, isProd, contractAddress]
-  )
+        newGameManager = await GameManager.create({
+          connection: ethConnection,
+          terminal,
+          contractAddress,
+          spectator: true,
+        });
+      } catch (e) {
+        console.error(e);
+
+        setStep(TerminalPromptStep.ERROR);
+
+        terminal.current?.print(
+          'Network under heavy load. Please refresh the page, and check ',
+          TerminalTextStyle.Red
+        );
+
+        terminal.current?.printLink(
+          'https://blockscout.com/poa/xdai/optimism',
+          () => {
+            window.open('https://blockscout.com/xdai/optimism');
+          },
+          TerminalTextStyle.Red
+        );
+
+        terminal.current?.println('');
+
+        return;
+      }
+
+      setGameManager(newGameManager);
+
+      window.df = newGameManager;
+
+      const newGameUIManager = await GameUIManager.create(newGameManager, terminal);
+
+      window.ui = newGameUIManager;
+
+      terminal.current?.newline();
+      terminal.current?.println('Connected to Dark Forest Contract');
+      gameUIManagerRef.current = newGameUIManager;
+      setStep(TerminalPromptStep.ALL_CHECKS_PASS);
+    },
+    [ethConnection, isProd, contractAddress]
+  );
 
   const advanceStateFromPlaying = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
@@ -528,9 +538,19 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
           FAUCET_ADDRESS,
           loadFaucetContract
         );
-        const nextAccessTimeSeconds = (await faucet.getNextAccessTime(playerAddress)).toNumber();
+        let nextAccessTimeSeconds = 0;
+
+        try {
+          nextAccessTimeSeconds = (await faucet.getNextAccessTime(playerAddress)).toNumber();
+        } catch (e) {
+          console.error(e);
+        }
         const nowSeconds = Date.now() / 1000;
-        console.log(`You can receive another drip in ${Math.floor((nextAccessTimeSeconds - nowSeconds)/60/60)} hours`);
+        console.log(
+          `You can receive another drip in ${Math.floor(
+            (nextAccessTimeSeconds - nowSeconds) / 60 / 60
+          )} hours`
+        );
         if (currBalance < 0.05 && nowSeconds > nextAccessTimeSeconds) {
           terminal.current?.println(`Getting xDAI from faucet...`, TerminalTextStyle.Blue);
           const success = await requestFaucet(playerAddress);
@@ -764,7 +784,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
           connection: ethConnection,
           terminal,
           contractAddress,
-          spectator : false
+          spectator: false,
         });
       } catch (e) {
         console.error(e);
@@ -887,9 +907,12 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
         setStep(TerminalPromptStep.TERMINATED);
         return;
       }
-      const endTime = gameUIManager.getEndTimeSeconds()
+      const endTime = gameUIManager.getEndTimeSeconds();
       if (endTime && Date.now() / 1000 > endTime) {
-        terminal.current?.println('ERROR: This game has ended. Terminating session.', TerminalTextStyle.Red);
+        terminal.current?.println(
+          'ERROR: This game has ended. Terminating session.',
+          TerminalTextStyle.Red
+        );
         setStep(TerminalPromptStep.TERMINATED);
         return;
       }

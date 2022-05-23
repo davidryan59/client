@@ -207,9 +207,19 @@ class LobbyPageTerminal {
         FAUCET_ADDRESS,
         loadFaucetContract
       );
-      const nextAccessTimeSeconds = (await faucet.getNextAccessTime(address)).toNumber();
+      let nextAccessTimeSeconds = 0;
+
+      try {
+        nextAccessTimeSeconds = (await faucet.getNextAccessTime(address)).toNumber();
+      } catch (e) {
+        console.error(e);
+      }
       const nowSeconds = Date.now() / 1000;
-      console.log(`You can receive another drip in ${Math.floor((nextAccessTimeSeconds - nowSeconds)/60/60)} hours`);
+      console.log(
+        `You can receive another drip in ${Math.floor(
+          (nextAccessTimeSeconds - nowSeconds) / 60 / 60
+        )} hours`
+      );
       if (currBalance < 0.05 && nowSeconds > nextAccessTimeSeconds) {
         this.terminal.println(`Getting xDAI from faucet...`, TerminalTextStyle.Blue);
         const success = await requestFaucet(address);
@@ -240,10 +250,9 @@ class LobbyPageTerminal {
           this.terminal.println('');
           return;
         }
-      }
-      else {
+      } else {
         this.accountSet(address);
-      } 
+      }
     } catch (e) {
       console.log(e);
       this.terminal.println('An unknown error occurred. please try again.', TerminalTextStyle.Red);

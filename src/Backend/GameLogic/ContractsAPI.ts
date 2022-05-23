@@ -1,4 +1,4 @@
-import { EMPTY_LOCATION_ID, GNOSIS_CHAIN_ID, GNOSIS_OPTIMISM_CHAIN_ID, KOVAN_OPTIMISM_CHAIN_ID } from '@darkforest_eth/constants';
+import { EMPTY_LOCATION_ID, GNOSIS_CHAIN_ID, GNOSIS_OPTIMISM_CHAIN_ID, KOVAN_OPTIMISM_CHAIN_ID, LOCAL_OPTIMISM_CHAIN_ID } from '@darkforest_eth/constants';
 import { DarkForest } from '@darkforest_eth/contracts/typechain';
 import {
   aggregateBulkGetter,
@@ -161,7 +161,7 @@ export class ContractsAPI extends EventEmitter {
     const chainId = (await this.ethConnection.getProvider().getNetwork()).chainId;
 
     let defaultGas = '1000000000'; // GNOSIS_CHAIN_ID gas
-    if (chainId === GNOSIS_OPTIMISM_CHAIN_ID) defaultGas = '1';
+    if (chainId === GNOSIS_OPTIMISM_CHAIN_ID || LOCAL_OPTIMISM_CHAIN_ID == chainId) defaultGas = '1';
     if (chainId === KOVAN_OPTIMISM_CHAIN_ID) defaultGas = '100000';
 
     const gasFeeGwei = EthersBN.from(overrides?.gasPrice || defaultGas);
@@ -954,7 +954,7 @@ export class ContractsAPI extends EventEmitter {
     const chainId = (await this.ethConnection.getProvider().getNetwork()).chainId;
     overrides = overrides ?? {};
     
-    if (chainId === GNOSIS_OPTIMISM_CHAIN_ID) overrides.gasPrice = '1';
+    if (chainId === GNOSIS_OPTIMISM_CHAIN_ID || LOCAL_OPTIMISM_CHAIN_ID === chainId) overrides.gasPrice = '1';
     if (chainId === KOVAN_OPTIMISM_CHAIN_ID) overrides.gasPrice = '100000';
 
     const queuedTx = await this.txExecutor.queueTransaction(txIntent, overrides);
