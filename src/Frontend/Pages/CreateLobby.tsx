@@ -68,7 +68,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
             START_PAUSED: false,
             CLAIM_PLANET_COOLDOWN: 0,
             ADMIN_PLANETS: [],
-            TOKEN_MINT_END_TIMESTAMP: new Date(2100).getTime(), // one day someone will need to update this
+            TOKEN_MINT_END_TIMESTAMP: 1682435240778, // Tuesday, April 25, 2023
             ARTIFACT_POINT_VALUES: [
               config.ARTIFACT_POINT_VALUES[ArtifactRarity.Unknown],
               config.ARTIFACT_POINT_VALUES[ArtifactRarity.Common],
@@ -77,6 +77,8 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
               config.ARTIFACT_POINT_VALUES[ArtifactRarity.Legendary],
               config.ARTIFACT_POINT_VALUES[ArtifactRarity.Mythic],
             ],
+            INIT_PLANETS: [],
+            NO_ADMIN: false,
             WHITELIST: []
           });
         })
@@ -108,7 +110,7 @@ export function CreateLobby({ match }: RouteComponentProps<{ contract: string }>
         connection={connection}
         ownerAddress={ownerAddress}
         startingConfig={startingConfig}
-        root={`/lobby/${contractAddress}`}
+        root={`/arena/${contractAddress}`}
       />
     ) : (
       <LobbyLandingPage onReady={onReady} />

@@ -1,3 +1,4 @@
+import { THEGRAPH_API_URL } from '@darkforest_eth/constants';
 import { ArenaLeaderboard, ArenaLeaderboardEntry } from '@darkforest_eth/types';
 import { getAllTwitters } from './UtilityServerAPI';
 
@@ -34,7 +35,6 @@ async function fetchGQL(query: any, graphApiUrl = API_URL_GRAPH) {
   });
 
   const rep = await response.json();
-  console.log(rep);
 
   if (rep.error) {
     throw new Error(rep.error);
@@ -49,18 +49,20 @@ async function convertData(inputPlayers: graphPlayer[]): Promise<ArenaLeaderboar
   let players: ArenaLeaderboardEntry[] = [];
   const twitters = await getAllTwitters();
 
-  
-  console.log(JSON.stringify(twitters));
   for (const player of inputPlayers) {
     const entry = players.find((p) => player.address == p.address);
     if (!!entry) {
       entry.games++;
       if (player.winner) entry.wins++;
     } else {
-      players.push({ address: player.address, games: 1, wins: player.winner ? 1 : 0, twitter: twitters[player.address]});
+      players.push({
+        address: player.address,
+        games: 1,
+        wins: player.winner ? 1 : 0,
+        twitter: twitters[player.address],
+      });
     }
   }
 
-  return {entries: players} as ArenaLeaderboard;
+  return { entries: players } as ArenaLeaderboard;
 }
- 

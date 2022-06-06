@@ -99,7 +99,7 @@ import delay from 'delay';
 import { BigNumber, Contract, ContractInterface, constants, providers } from 'ethers';
 import { EventEmitter } from 'events';
 import NotificationManager from '../../Frontend/Game/NotificationManager';
-import { MIN_CHUNK_SIZE } from '../../Frontend/Utils/constants';
+import { competitiveConfig, MIN_CHUNK_SIZE } from '../../Frontend/Utils/constants';
 import { Diff, generateDiffEmitter, getDisposableEmitter } from '../../Frontend/Utils/EmitterUtils';
 import {
   getBooleanSetting,
@@ -236,6 +236,12 @@ class GameManager extends EventEmitter {
   private readonly contractConstants: ContractConstants;
 
   private paused: boolean;
+
+    /**
+   * @todo change this to the correct timestamp each round.
+   */
+     private startTime: number | undefined;
+
 
   /**
    * @todo change this to the correct timestamp each round.
@@ -393,6 +399,7 @@ class GameManager extends EventEmitter {
     gameover: boolean,
     winners: EthAddress[],
     spectator: boolean,
+    startTime: number | undefined,
     endTime : number | undefined,
   ) {
     super();
@@ -501,6 +508,7 @@ class GameManager extends EventEmitter {
     this.snarkHelper = snarkHelper;
     this.useMockHash = useMockHash;
     this.paused = paused;
+    this.startTime = startTime;
     this.endTimeSeconds = endTime;
 
     this.spectator = spectator;
@@ -709,6 +717,7 @@ class GameManager extends EventEmitter {
       initialState.gameover,
       initialState.winners,
       spectator,
+      initialState.startTime,
       initialState.endTime
     );
 
@@ -815,6 +824,9 @@ class GameManager extends EventEmitter {
           // mining manager should be initialized already via joinGame, but just in case...
           gameManager.initMiningManager(tx.intent.location.coords, 4);
         } else if (isUnconfirmedMoveTx(tx)) {
+          if(!gameManager.startTime) {
+            gameManager.startTime = Date.now() / 1000;
+          }
           const promises = [gameManager.bulkHardRefreshPlanets([tx.intent.from, tx.intent.to])];
           if (tx.intent.artifact) {
             promises.push(gameManager.hardRefreshArtifact(tx.intent.artifact));
@@ -889,6 +901,9 @@ class GameManager extends EventEmitter {
       .on(ContractsAPIEvent.Gameover, async () => {
         gameManager.setGameover(true);
         gameManager.gameover$.publish(true);
+      })
+      .on(ContractsAPIEvent.GameStarted, async (player: EthAddress, startTime: number) => {
+        gameManager.startTime = startTime;
       });
 
     const unconfirmedTxs = await persistentChunkStore.getUnconfirmedSubmittedEthTxs();
@@ -1695,6 +1710,7 @@ class GameManager extends EventEmitter {
   private async setGameover(gameover: boolean) {
     this.gameover = gameover;
     this.winners = await this.contractsAPI.getWinners();
+    this.startTime = await this.contractsAPI.getStartTime();
     this.endTimeSeconds = (await this.contractsAPI.getEndTime());
   }
 
@@ -2928,6 +2944,20 @@ class GameManager extends EventEmitter {
         throw new Error('attempted to move from a planet not owned by player');
       }
 
+      if (this.contractConstants.SPACE_JUNK_ENABLED && this.account) {
+        const toPlanetJunk = this.entityStore.getPlanetWithLocation(newLocation)?.spaceJunk;
+        const playerJunk = this.getPlayerSpaceJunk(this.account);
+        const junkLimit = this.getPlayerSpaceJunkLimit(this.account);
+        const fromPlanet = this.getPlanetWithId(from)
+        let energyAbandoning : number = 0;
+        if(abandoning && fromPlanet) {
+          energyAbandoning =  this.getDefaultSpaceJunkForPlanetLevel(fromPlanet?.planetLevel) || 0;
+        }
+        if(toPlanetJunk && playerJunk && junkLimit && (playerJunk + toPlanetJunk - energyAbandoning > junkLimit)) {
+          throw new Error('player reached junk limit');
+        }
+      }
+
       const getArgs = async (): Promise<unknown[]> => {
         const snarkArgs = await this.snarkHelper.getMoveArgs(
           oldX,
@@ -3623,14 +3653,17 @@ class GameManager extends EventEmitter {
   }
 
   public gameDuration() {
-    if(this.endTimeSeconds) {
-      return this.endTimeSeconds - this.contractConstants.START_TIME;
+    if(!this.startTime){
+      return 0;
     }
-    return Date.now() / 1000 - this.contractConstants.START_TIME;
+    if(this.endTimeSeconds) {
+      return this.endTimeSeconds - this.startTime;
+    }
+    return Date.now() / 1000 - this.startTime;
   }
 
-  public startTime() {
-      return this.contractConstants.START_TIME;
+  public getStartTime() {
+      return this.startTime;
   }
 
   public claimVictoryPercentage() {
@@ -3685,6 +3718,11 @@ class GameManager extends EventEmitter {
     return this.paused$;
   }
 
+  public getGameStarted(): boolean {
+    if(this.getStartTime() !== undefined) return true;
+    return false;
+  }
+
   public getGameover(): boolean {
     return this.gameover;
   }
@@ -3695,6 +3733,10 @@ class GameManager extends EventEmitter {
 
   public getWinners(): EthAddress[] {
     return this.winners;
+  }
+
+  public isCompetitive(): boolean {
+    return this.contractConstants.CONFIG_HASH == competitiveConfig
   }
   
 }

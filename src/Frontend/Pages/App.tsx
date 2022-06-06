@@ -31,12 +31,13 @@ function App() {
       <Theme color='dark' scale='medium'>
         <Router>
           <Switch>
-            <Redirect path='/play' to={`/play/${defaultAddress}`} push={true} exact={true} />
+            {/* <Redirect path='/play' to={`/play/${defaultAddress}`} push={true} exact={true} /> */}
+            <Route path='/play/' component={GameLandingPage} exact = {true}/>
             <Route path='/play/:contract' component={GameLandingPage} />
             <Route path='/events' component={EventsPage} />
             <Route path='/' exact component={LandingPage} />
-            <Redirect path='/lobby' to={`/lobby/${defaultAddress}`} push={true} exact={true} />
-            <Route path='/lobby/:contract' component={CreateLobby} />
+            <Redirect path='/arena' to={`/arena/${defaultAddress}`} push={true} exact={true} />
+            <Route path='/arena/:contract' component={CreateLobby} />
             <Route path='/planet/:locationId' component={SharePlanet} />
             <Route path='/artifact/:artifactId' component={ShareArtifact} />
             <Route

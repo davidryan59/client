@@ -1,7 +1,12 @@
 import { BLOCK_EXPLORER_URL } from '@darkforest_eth/constants';
-import { CONTRACT_ADDRESS, FAUCET_ADDRESS } from '@darkforest_eth/contracts';
-import { DarkForest, DFArenaFaucet } from '@darkforest_eth/contracts/typechain';
-import { EthConnection, neverResolves, weiToEth } from '@darkforest_eth/network';
+import { CONTRACT_ADDRESS, FAUCET_ADDRESS, INIT_ADDRESS } from '@darkforest_eth/contracts';
+import { DarkForest, DFArenaFaucet, DFArenaInitialize } from '@darkforest_eth/contracts/typechain';
+import {
+  EthConnection,
+  neverResolves,
+  ThrottledConcurrentQueue,
+  weiToEth,
+} from '@darkforest_eth/network';
 import { address } from '@darkforest_eth/serde';
 import { bigIntFromKey } from '@darkforest_eth/whitelist';
 import { utils, Wallet } from 'ethers';
@@ -17,6 +22,7 @@ import {
   getEthConnection,
   loadDiamondContract,
   loadFaucetContract,
+  loadInitContract,
 } from '../../Backend/Network/Blockchain';
 import {
   callRegisterAndWaitForConfirmation,
@@ -43,6 +49,10 @@ import { TerminalTextStyle } from '../Utils/TerminalTypes';
 import UIEmitter, { UIEmitterEvent } from '../Utils/UIEmitter';
 import { GameWindowLayout } from '../Views/GameWindowLayout';
 import { Terminal, TerminalHandle } from '../Views/Terminal';
+import { stockConfig } from '../Utils/StockConfigs';
+import { ContractMethodName, EthAddress, UnconfirmedCreateLobby } from '@darkforest_eth/types';
+import { getLobbyCreatedEvent, lobbyPlanetsToInitPlanets } from '../Utils/helpers';
+import _ from 'lodash';
 
 const enum TerminalPromptStep {
   NONE,
@@ -50,6 +60,9 @@ const enum TerminalPromptStep {
   DISPLAY_ACCOUNTS,
   GENERATE_ACCOUNT,
   IMPORT_ACCOUNT,
+  ARENA_CREATED,
+  PLANETS_CREATED,
+  CONTRACT_SET,
   ACCOUNT_SET,
   SPECTATING,
   PLAYING,
@@ -78,13 +91,18 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
   const [terminalVisible, setTerminalVisible] = useState(true);
   const [initRenderState, setInitRenderState] = useState(InitRenderState.NONE);
   const [ethConnection, setEthConnection] = useState<EthConnection | undefined>();
+  const [contractAddress, setContractAddress] = useState<EthAddress | undefined>(
+    match.params.contract ? address(match.params.contract) : undefined
+  );
   const [step, setStep] = useState(TerminalPromptStep.NONE);
 
   const params = new URLSearchParams(location.search);
   const useZkWhitelist = params.has('zkWhitelist');
   const selectedAddress = params.get('account');
-  const contractAddress = address(match.params.contract);
   const isLobby = contractAddress !== address(CONTRACT_ADDRESS);
+  const CHUNK_SIZE = 5;
+  const config = stockConfig.competitive;
+  const defaultAddress = address(CONTRACT_ADDRESS);
 
   useEffect(() => {
     getEthConnection()
@@ -141,7 +159,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
       if (isLobby) {
         terminal.current?.newline();
         terminal.current?.printElement(
-          <MythicLabelText text={`You are joining a Dark Forest lobby`} />
+          <MythicLabelText text={`You are joining a Dark Forest Arena`} />
         );
         terminal.current?.newline();
         terminal.current?.newline();
@@ -324,34 +342,59 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
     [isLobby, ethConnection, selectedAddress]
   );
 
+  async function loadBalances(addresses: EthAddress[]) {
+    if (!ethConnection) throw new Error('error: cannot load balances');
+    const queue = new ThrottledConcurrentQueue({
+      invocationIntervalMs: 1000,
+      maxInvocationsPerIntervalMs: 25,
+    });
+
+    const balances = await Promise.all(
+      addresses.map((address) => queue.add(() => ethConnection.loadBalance(address)))
+    );
+
+    return balances.map(weiToEth);
+  }
+
   const advanceStateFromDisplayAccounts = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       terminal.current?.println(``);
       const accounts = getAccounts();
-      for (let i = 0; i < accounts.length; i += 1) {
-        terminal.current?.print(`(${i + 1}): `, TerminalTextStyle.Sub);
-        terminal.current?.println(`${accounts[i].address}`);
-      }
-      terminal.current?.println(``);
-      terminal.current?.println(`Select an account:`, TerminalTextStyle.Text);
 
-      const selection = +((await terminal.current?.getInput()) || '');
-      if (isNaN(selection) || selection > accounts.length) {
-        terminal.current?.println('Unrecognized input. Please try again.');
-        await advanceStateFromDisplayAccounts(terminal);
-      } else {
-        const account = accounts[selection - 1];
-        try {
+      try {
+        const balances = await loadBalances(accounts.map((a) => a.address));
+
+        for (let i = 0; i < accounts.length; i += 1) {
+          terminal.current?.print(`(${i + 1}): `, TerminalTextStyle.Sub);
+          terminal.current?.print(`${accounts[i].address} `);
+          if (balances[i] == 0) {
+            terminal.current?.println(balances[i].toFixed(2) + ' xDAI', TerminalTextStyle.Red);
+          } else {
+            terminal.current?.println(balances[i].toFixed(2) + ' xDAI', TerminalTextStyle.Green);
+          }
+        }
+        terminal.current?.println(``);
+        terminal.current?.println(`Select an account:`, TerminalTextStyle.Text);
+
+        const selection = +((await terminal.current?.getInput()) || '');
+        if (isNaN(selection) || selection > accounts.length) {
+          terminal.current?.println('Unrecognized input. Please try again.');
+          await advanceStateFromDisplayAccounts(terminal);
+        } else {
+          const account = accounts[selection - 1];
           await ethConnection?.setAccount(account.privateKey);
           setStep(TerminalPromptStep.ACCOUNT_SET);
-        } catch (e) {
-          terminal.current?.println(
-            'An unknown error occurred. please try again.',
-            TerminalTextStyle.Red
-          );
         }
+      } catch (e) {
+        console.log(e);
+        terminal.current?.println(
+          'An unknown error occurred. please try again.',
+          TerminalTextStyle.Red
+        );
+        return;
       }
     },
+
     [ethConnection]
   );
 
@@ -426,8 +469,114 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
     },
     [ethConnection]
   );
-
   const advanceStateFromAccountSet = useCallback(
+    async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
+      if (contractAddress) {
+        setStep(TerminalPromptStep.CONTRACT_SET);
+      } else {
+        const playerAddress = ethConnection?.getAddress();
+        if (!playerAddress || !ethConnection) throw new Error('not logged in');
+
+        const currBalance = weiToEth(await ethConnection.loadBalance(playerAddress));
+        const faucet = await ethConnection.loadContract<DFArenaFaucet>(
+          FAUCET_ADDRESS,
+          loadFaucetContract
+        );
+        let nextAccessTimeSeconds = 0;
+
+        try {
+          nextAccessTimeSeconds = (await faucet.getNextAccessTime(playerAddress)).toNumber();
+        } catch (e) {
+          console.error(e);
+        }
+        const nowSeconds = Date.now() / 1000;
+        console.log(
+          `You can receive another drip in ${Math.floor(
+            (nextAccessTimeSeconds - nowSeconds) / 60 / 60
+          )} hours`
+        );
+        if (currBalance < 0.05 && nowSeconds > nextAccessTimeSeconds) {
+          terminal.current?.println(`Getting xDAI from faucet...`, TerminalTextStyle.Blue);
+          const success = await requestFaucet(playerAddress);
+          if (success) {
+            const newBalance = weiToEth(await ethConnection.loadBalance(playerAddress));
+            terminal.current?.println(
+              `Your balance has increased by ${newBalance - currBalance}.`,
+              TerminalTextStyle.Green
+            );
+            await new Promise((r) => setTimeout(r, 1500));
+          } else {
+            terminal.current?.println(
+              'An error occurred in faucet. Try again with an account that has XDAI',
+              TerminalTextStyle.Red
+            );
+
+            terminal.current?.printLink(
+              'or click here to manually get Optimism xDAI\n',
+              () => {
+                window.open(
+                  'https://www.xdaichain.com/for-developers/optimism-optimistic-rollups-on-gc'
+                );
+              },
+              TerminalTextStyle.Blue
+            );
+            terminal.current?.println('');
+            return;
+          }
+        }
+        terminal.current?.println('');
+        terminal.current?.print('Creating new arena instance...');
+        try {
+          await createLobby();
+          terminal.current?.println('arena created.', TerminalTextStyle.Green);
+          setStep(TerminalPromptStep.ARENA_CREATED);
+        } catch (e) {
+          console.error(e);
+          terminal.current?.println('FAILED', TerminalTextStyle.Red);
+          terminal.current?.println('');
+          terminal.current?.println('Press ENTER to try again.');
+          await terminal.current?.getInput();
+          terminal.current?.println('');
+
+          await advanceStateFromAccountSet(terminal);
+        }
+      }
+    },
+    [ethConnection]
+  );
+
+  const advanceStateFromArenaCreated = useCallback(
+    async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
+      terminal.current?.print('Adding custom planets...');
+
+      try {
+        await createPlanets();
+        terminal.current?.println('planets created.', TerminalTextStyle.Green);
+        setStep(TerminalPromptStep.PLANETS_CREATED);
+      } catch (e) {
+        console.error(e);
+
+        terminal.current?.println('FAILED', TerminalTextStyle.Red);
+        terminal.current?.println('');
+        terminal.current?.println('Press ENTER to try again.');
+        await terminal.current?.getInput();
+
+        await advanceStateFromArenaCreated(terminal);
+        return;
+      }
+    },
+    [ethConnection, contractAddress]
+  );
+
+  // TODO: Check that the config hash matches the competitive hash to ensure the game will be counted
+  const advanceStateFromPlanetsCreated = useCallback(
+    async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
+      setStep(TerminalPromptStep.CONTRACT_SET);
+    },
+    []
+  );
+
+  const advanceStateFromContractSet = useCallback(
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       terminal.current?.println(``);
       terminal.current?.println(
@@ -449,7 +598,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
         setStep(TerminalPromptStep.SPECTATING);
       } else {
         terminal.current?.println('Unrecognized input. Please try again.');
-        await advanceStateFromAccountSet(terminal);
+        await advanceStateFromContractSet(terminal);
       }
     },
     []
@@ -460,7 +609,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
       let newGameManager: GameManager;
       try {
         const playerAddress = ethConnection?.getAddress();
-        if (!playerAddress || !ethConnection) throw new Error('not logged in');
+        if (!playerAddress || !ethConnection || !contractAddress) throw new Error('not logged in');
 
         newGameManager = await GameManager.create({
           connection: ethConnection,
@@ -511,7 +660,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
     async (terminal: React.MutableRefObject<TerminalHandle | undefined>) => {
       try {
         const playerAddress = ethConnection?.getAddress();
-        if (!playerAddress || !ethConnection) throw new Error('not logged in');
+        if (!playerAddress || !ethConnection || !contractAddress) throw new Error('not logged in');
 
         const whitelist = await ethConnection.loadContract<DarkForest>(
           contractAddress,
@@ -648,7 +797,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
             TerminalTextStyle.Red
           );
           if (registerConfirmationResponse.canRetry) {
-            terminal.current?.println('Press any key to try again.');
+            terminal.current?.println('Press ENTER to try again.');
             await terminal.current?.getInput();
             advanceStateFromAskWhitelistKey(terminal);
           } else {
@@ -670,7 +819,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
           setStep(TerminalPromptStep.ASKING_PLAYER_EMAIL);
         }
       } else {
-        if (!ethConnection) throw new Error('no eth connection');
+        if (!ethConnection || !contractAddress) throw new Error('no eth connection');
         const contractsAPI = await makeContractsAPI({ connection: ethConnection, contractAddress });
 
         const keyBigInt = bigIntFromKey(key);
@@ -705,7 +854,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
               setStep(TerminalPromptStep.ASKING_WAITLIST_EMAIL);
             } else {
               terminal.current?.println(`ERROR: Something went wrong.`, TerminalTextStyle.Red);
-              terminal.current?.println('Press any key to try again.');
+              terminal.current?.println('Press ENTER to try again.');
               await terminal.current?.getInput();
               advanceStateFromAskWhitelistKey(terminal);
             }
@@ -778,7 +927,7 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
       let newGameManager: GameManager;
 
       try {
-        if (!ethConnection) throw new Error('no eth connection');
+        if (!ethConnection || !contractAddress) throw new Error('no eth connection');
 
         newGameManager = await GameManager.create({
           connection: ethConnection,
@@ -925,12 +1074,13 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
       terminal.current?.println('in the Settings pane.');
       terminal.current?.println('');
 
-      terminal.current?.newline();
+      if (!gameUIManager.getGameManager().getContractConstants().MANUAL_SPAWN) {
+        terminal.current?.newline();
+        terminal.current?.println('Press ENTER to find a home planet. This may take up to 120s.');
+        terminal.current?.println('This will consume a lot of CPU.');
 
-      terminal.current?.println('Press ENTER to find a home planet. This may take up to 120s.');
-      terminal.current?.println('This will consume a lot of CPU.');
-
-      await terminal.current?.getInput();
+        await terminal.current?.getInput();
+      }
 
       gameUIManager.getGameManager().on(GameManagerEvent.InitializedPlayer, () => {
         setTimeout(() => {
@@ -1028,6 +1178,12 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
         await advanceStateFromImportAccount(terminal);
       } else if (step === TerminalPromptStep.ACCOUNT_SET) {
         await advanceStateFromAccountSet(terminal);
+      } else if (step === TerminalPromptStep.ARENA_CREATED) {
+        await advanceStateFromArenaCreated(terminal);
+      } else if (step === TerminalPromptStep.PLANETS_CREATED) {
+        await advanceStateFromPlanetsCreated(terminal);
+      } else if (step === TerminalPromptStep.CONTRACT_SET) {
+        await advanceStateFromContractSet(terminal);
       } else if (step === TerminalPromptStep.SPECTATING) {
         await advanceStateFromSpectating(terminal);
       } else if (step === TerminalPromptStep.PLAYING) {
@@ -1056,28 +1212,91 @@ export function GameLandingPage({ match, location }: RouteComponentProps<{ contr
         await advanceStateFromError();
       }
     },
-    [
-      step,
-      advanceStateFromAccountSet,
-      advanceStateFromAddAccount,
-      advanceStateFromAllChecksPass,
-      advanceStateFromAskAddAccount,
-      advanceStateFromAskHasWhitelistKey,
-      advanceStateFromAskPlayerEmail,
-      advanceStateFromAskWaitlistEmail,
-      advanceStateFromAskWhitelistKey,
-      advanceStateFromCompatibilityPassed,
-      advanceStateFromComplete,
-      advanceStateFromDisplayAccounts,
-      advanceStateFromError,
-      advanceStateFromFetchingEthData,
-      advanceStateFromGenerateAccount,
-      advanceStateFromImportAccount,
-      advanceStateFromNoHomePlanet,
-      advanceStateFromNone,
-      ethConnection,
-    ]
+    [step, ethConnection]
   );
+
+  async function createLobby() {
+    if (!ethConnection || !defaultAddress) throw new Error('cannot create lobby');
+
+    const contractsAPI = await makeContractsAPI({
+      connection: ethConnection,
+      contractAddress: defaultAddress,
+    });
+    const playerAddress = ethConnection.getAddress();
+
+    var initializers = config;
+    if (initializers.ADMIN_PLANETS) {
+      initializers.INIT_PLANETS = lobbyPlanetsToInitPlanets(
+        initializers.ADMIN_PLANETS,
+        initializers
+      );
+    }
+    /* Don't want to submit ADMIN_PLANET as initdata because they aren't used */
+    // @ts-expect-error The Operand of a delete must be optional
+    delete initializers.ADMIN_PLANETS;
+
+    console.log('config', initializers);
+
+    const initContract = await ethConnection.loadContract<DFArenaInitialize>(
+      INIT_ADDRESS,
+      loadInitContract
+    );
+    const artifactBaseURI = '';
+    const initInterface = initContract.interface;
+    const initAddress = INIT_ADDRESS;
+    const initFunctionCall = initInterface.encodeFunctionData('init', [
+      initializers.WHITELIST_ENABLED,
+      artifactBaseURI,
+      initializers,
+    ]);
+    const txIntent: UnconfirmedCreateLobby = {
+      methodName: 'createLobby',
+      contract: contractsAPI.contract,
+      args: Promise.resolve([initAddress, initFunctionCall]),
+    };
+
+    const tx = await contractsAPI.submitTransaction(txIntent, {
+      // The createLobby function costs somewhere around 12mil gas
+      gasLimit: '15000000',
+    });
+
+    const lobbyReceipt = await tx.confirmedPromise;
+    const { owner, lobby } = getLobbyCreatedEvent(lobbyReceipt, contractsAPI.contract);
+    console.log(`created arena with ${lobbyReceipt.gasUsed} gas`);
+
+    if (owner === playerAddress) {
+      history.push({ pathname: `${match.path}${lobby}`, state: { contract: lobby } });
+      setContractAddress(lobby);
+    }
+  }
+
+  async function createPlanets() {
+    if (!ethConnection || !contractAddress) throw new Error('cannot create planets');
+
+    const contractsAPI = await makeContractsAPI({
+      connection: ethConnection,
+      contractAddress,
+    });
+
+    _.chunk(config.INIT_PLANETS, CHUNK_SIZE).map(async (chunk) => {
+      const args = Promise.resolve([chunk]);
+      const txIntent = {
+        methodName: 'bulkCreateAndReveal' as ContractMethodName,
+        contract: contractsAPI.contract,
+        args: args,
+      };
+
+      const tx = await contractsAPI.submitTransaction(txIntent, {
+        gasLimit: '15000000',
+      });
+
+      await tx.confirmedPromise;
+      console.log(
+        `successfully created planets`,
+        chunk.map((i) => i)
+      );
+    });
+  }
 
   useEffect(() => {
     const uiEmitter = UIEmitter.getInstance();

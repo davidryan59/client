@@ -4,16 +4,16 @@ const onePlayerRace: LobbyInitializers = {
   ADMIN_CAN_ADD_PLANETS: true,
   WORLD_RADIUS_LOCKED: true,
   WORLD_RADIUS_MIN: 3000,
-  DISABLE_ZK_CHECKS: true,
-  PLANETHASH_KEY: 1317,
-  SPACETYPE_KEY: 1318,
-  BIOMEBASE_KEY: 1319,
+  DISABLE_ZK_CHECKS: false,
+  PLANETHASH_KEY: 4401,
+  SPACETYPE_KEY: 4402,
+  BIOMEBASE_KEY: 4403,
   PERLIN_LENGTH_SCALE: 512,
   PERLIN_MIRROR_X: false,
   PERLIN_MIRROR_Y: false,
   CLAIM_PLANET_COOLDOWN: 0,
-  MAX_NATURAL_PLANET_LEVEL: 4,
-  TIME_FACTOR_HUNDREDTHS: 1700,
+  MAX_NATURAL_PLANET_LEVEL: 3,
+  TIME_FACTOR_HUNDREDTHS: 1000,
   PERLIN_THRESHOLD_1: 11,
   PERLIN_THRESHOLD_2: 15,
   PERLIN_THRESHOLD_3: 19,
@@ -22,9 +22,9 @@ const onePlayerRace: LobbyInitializers = {
   BIOME_THRESHOLD_1: 14,
   BIOME_THRESHOLD_2: 17,
   SILVER_SCORE_VALUE: 10,
-  PLANET_LEVEL_THRESHOLDS: [16777216, 4194292, 1048561, 262128, 65520, 16368, 4080, 1008, 240, 48],
-  PLANET_RARITY: 9000,
-  PLANET_TRANSFER_ENABLED: true,
+  PLANET_LEVEL_THRESHOLDS: [4194293, 4194292, 1048561, 262128, 65520, 16368, 4080, 1008, 240, 48],
+  PLANET_RARITY: 7000,
+  PLANET_TRANSFER_ENABLED: false,
   PLANET_TYPE_WEIGHTS: [
     [
       [1, 0, 0, 0, 0],
@@ -81,7 +81,7 @@ const onePlayerRace: LobbyInitializers = {
   PLANET_LEVEL_JUNK: [20, 25, 30, 35, 40, 45, 50, 55, 60, 65],
   ABANDON_SPEED_CHANGE_PERCENT: 150,
   ABANDON_RANGE_CHANGE_PERCENT: 150,
-  PHOTOID_ACTIVATION_DELAY: 60,
+  PHOTOID_ACTIVATION_DELAY: 300,
   SPAWN_RIM_AREA: 0,
   LOCATION_REVEAL_COOLDOWN: 10800,
   CAPTURE_ZONES_ENABLED: false,
@@ -95,31 +95,82 @@ const onePlayerRace: LobbyInitializers = {
   CAPTURE_ZONES_PER_5000_WORLD_RADIUS: 3,
   MANUAL_SPAWN: true,
   TARGET_PLANETS: true,
-  CLAIM_VICTORY_ENERGY_PERCENT: 50,
-  MODIFIERS: [100, 100, 100, 100, 100, 100, 100, 100],
-  SPACESHIPS: [true, true, true, true, true],
+  CLAIM_VICTORY_ENERGY_PERCENT: 100,
+  MODIFIERS: [100, 100, 100, 100, 75, 100, 100, 100],
+  SPACESHIPS: [true, true, false, true, false],
+  RANDOM_ARTIFACTS: false,
+  NO_ADMIN: true,
   WHITELIST_ENABLED: false,
   START_PAUSED: false,
   ADMIN_PLANETS: [
     {
-      x: -1950,
-      y: -1950,
-      level: 0,
+      x: -1668,
+      y: -2321,
+      level: 3,
       planetType: 0,
       isTargetPlanet: false,
       isSpawnPlanet: true,
     },
     {
-      x: 1950,
-      y: 1950,
-      level: 4,
+      x: -320,
+      y: -1772,
+      level: 3,
       planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
+    {
+      x: 2005,
+      y: 1973,
+      level: 4,
+      planetType: 4,
       isTargetPlanet: true,
       isSpawnPlanet: false,
     },
+    {
+      x: -1222,
+      y: -1363,
+      level: 3,
+      planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
+    {
+      x: -263,
+      y: -727,
+      level: 3,
+      planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
+    {
+      x: -53,
+      y: 763,
+      level: 3,
+      planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
+    {
+      x: 717,
+      y: 1174,
+      level: 3,
+      planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
+    {
+      x: 2054,
+      y: 984,
+      level: 3,
+      planetType: 0,
+      isTargetPlanet: false,
+      isSpawnPlanet: false,
+    },
   ],
-  TOKEN_MINT_END_TIMESTAMP: 1682435240778,
+  TOKEN_MINT_END_TIMESTAMP: 1717258179,
   WHITELIST: [],
+  INIT_PLANETS: [],
 };
 
 const fourPlayerBattle: LobbyInitializers = {
@@ -222,6 +273,7 @@ const fourPlayerBattle: LobbyInitializers = {
   SPACESHIPS: [true, true, false, true, false],
   WHITELIST_ENABLED: false,
   START_PAUSED: false,
+  RANDOM_ARTIFACTS: true,
   ADMIN_PLANETS: [
     {
       x: -5500,
@@ -264,7 +316,9 @@ const fourPlayerBattle: LobbyInitializers = {
       isSpawnPlanet: false,
     },
   ],
-  TOKEN_MINT_END_TIMESTAMP: 1682174749561,
+  TOKEN_MINT_END_TIMESTAMP: 1717258179, // SECONDS!,
+  NO_ADMIN: false,
+  INIT_PLANETS: [],
   WHITELIST: [],
 };
 
@@ -368,6 +422,7 @@ const sprint: LobbyInitializers = {
   SPACESHIPS: [true, true, false, true, true],
   WHITELIST_ENABLED: false,
   START_PAUSED: false,
+  RANDOM_ARTIFACTS: true,
   ADMIN_PLANETS: [
     {
       x: -1000,
@@ -394,12 +449,23 @@ const sprint: LobbyInitializers = {
       isSpawnPlanet: false,
     },
   ],
-  TOKEN_MINT_END_TIMESTAMP: 1682435240778,
+  TOKEN_MINT_END_TIMESTAMP: 1717258179, // SECONDS!,
+  NO_ADMIN: false,
+  INIT_PLANETS: [],
   WHITELIST: [],
 };
 
-export const stockConfig = {
+const competitive: LobbyInitializers = onePlayerRace;
+
+export interface StockConfig {
+  onePlayerRace: LobbyInitializers;
+  fourPlayerBattle: LobbyInitializers;
+  sprint: LobbyInitializers;
+  competitive: LobbyInitializers;
+}
+export const stockConfig: StockConfig = {
   onePlayerRace: onePlayerRace,
   fourPlayerBattle: fourPlayerBattle,
   sprint: sprint,
+  competitive: competitive,
 };
