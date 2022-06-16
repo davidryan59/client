@@ -20,7 +20,7 @@ import {
 } from '@darkforest_eth/types';
 import { LobbyPlanet } from '../../Frontend/Panes/Lobbies/LobbiesUtils';
 import { LobbyInitializers } from '../../Frontend/Panes/Lobbies/Reducer';
-import { lobbyPlanetsToInitPlanets, lobbyPlanetToInitPlanet } from '../../Frontend/Utils/helpers';
+import { getLobbyCreatedEvent, lobbyPlanetsToInitPlanets, lobbyPlanetToInitPlanet } from '../../Frontend/Utils/helpers';
 import { ContractsAPI, makeContractsAPI } from '../GameLogic/ContractsAPI';
 
 export type CreatePlanetData = {

@@ -171,6 +171,7 @@ const onePlayerRace: LobbyInitializers = {
   TOKEN_MINT_END_TIMESTAMP: 1717258179,
   WHITELIST: [],
   INIT_PLANETS: [],
+  CONFIRM_START: false,
 };
 
 const fourPlayerBattle: LobbyInitializers = {
@@ -320,6 +321,7 @@ const fourPlayerBattle: LobbyInitializers = {
   NO_ADMIN: false,
   INIT_PLANETS: [],
   WHITELIST: [],
+  CONFIRM_START: false,
 };
 
 const sprint: LobbyInitializers = {
@@ -453,6 +455,7 @@ const sprint: LobbyInitializers = {
   NO_ADMIN: false,
   INIT_PLANETS: [],
   WHITELIST: [],
+  CONFIRM_START: false,
 };
 
 const grandPrixWeek2: LobbyInitializers = {
@@ -634,6 +637,7 @@ const grandPrixWeek2: LobbyInitializers = {
   TOKEN_MINT_END_TIMESTAMP: 1682435240778,
   INIT_PLANETS: [],
   WHITELIST: [],
+  CONFIRM_START: false,
 };
 const competitive: LobbyInitializers = grandPrixWeek2;
 

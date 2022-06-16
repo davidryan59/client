@@ -462,7 +462,8 @@ export class ContractsAPI extends EventEmitter {
       RANDOM_ARTIFACTS,
       NO_ADMIN,
       CONFIG_HASH,
-      INIT_PLANET_HASHES
+      INIT_PLANET_HASHES,
+      CONFIRM_START
     } = await this.makeCall(this.contract.getArenaConstants);
 
     const TOKEN_MINT_END_SECONDS = (
@@ -605,6 +606,7 @@ export class ContractsAPI extends EventEmitter {
       NO_ADMIN: NO_ADMIN,
       INIT_PLANET_HASHES: INIT_PLANET_HASHES,
       CONFIG_HASH: CONFIG_HASH,
+      CONFIRM_START: CONFIRM_START
     };
 
     return constants;

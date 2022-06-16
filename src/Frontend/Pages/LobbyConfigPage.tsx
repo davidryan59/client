@@ -2,8 +2,8 @@ import { INIT_ADDRESS } from '@darkforest_eth/contracts';
 import initContractAbiUrl from '@darkforest_eth/contracts/abis/DFArenaInitialize.json';
 import { DFArenaInitialize } from '@darkforest_eth/contracts/typechain';
 import { EthConnection } from '@darkforest_eth/network';
-import { ContractMethodName, EthAddress, UnconfirmedCreateLobby } from '@darkforest_eth/types';
-import { Contract } from 'ethers';
+import { ContractMethodName, EthAddress, UnconfirmedCreateLobby, UnconfirmedDiamondCut } from '@darkforest_eth/types';
+import { Contract, ethers } from 'ethers';
 import _, { initial } from 'lodash';
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useHistory } from 'react-router-dom';
@@ -60,24 +60,49 @@ export function LobbyConfigPage({
     const initInterface = initContract.interface;
     const initAddress = INIT_ADDRESS;
     const initFunctionCall = initInterface.encodeFunctionData('init', [
-      initializers.WHITELIST_ENABLED,
-      artifactBaseURI,
       initializers,
+      {
+        allowListEnabled: initializers.WHITELIST_ENABLED,
+        artifactBaseURI,
+        allowedAddresses: [] // Eventually will be from initializers
+      }
     ]);
-    const txIntent: UnconfirmedCreateLobby = {
+
+    const noInit = {
+      address: ethers.constants.AddressZero,
+      calldata: '0x',
+    };
+
+    const createArenaTxIntent: UnconfirmedCreateLobby = {
       methodName: 'createLobby',
       contract: contract.contract,
       args: Promise.resolve([initAddress, initFunctionCall]),
     };
 
-    const tx = await contract.submitTransaction(txIntent, {
+    const createArenaTxReceipt = await contract.submitTransaction(createArenaTxIntent, {
       // The createLobby function costs somewhere around 12mil gas
       gasLimit: '15000000',
     });
 
-    const lobbyReceipt = await tx.confirmedPromise;
+    const lobbyReceipt = await createArenaTxReceipt.confirmedPromise;
+
+    // const initializeArenaTxIntent: UnconfirmedDiamondCut = {
+    //   methodName: 'diamondCut',
+    //   contract: contract.contract,
+    //   args: Promise.resolve([[], initAddress, initFunctionCall]),
+    // };
+
+    // const initializeArenaTxReceipt = await contract.submitTransaction(initializeArenaTxIntent, {
+    //   // The createLobby function costs somewhere around 12mil gas
+    //   gasLimit: '15000000',
+    // });
+
+    // const initReceipt = await initializeArenaTxReceipt.confirmedPromise;
+
     const { owner, lobby } = getLobbyCreatedEvent(lobbyReceipt, contract.contract);
-    setLobbyTx(tx?.hash);
+    setLobbyTx(createArenaTxReceipt?.hash);
+
+    console.log('created and initialized arena');
 
     if (owner === ownerAddress) {
       if (!connection) {

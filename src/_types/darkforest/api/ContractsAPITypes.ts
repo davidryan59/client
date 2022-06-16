@@ -337,6 +337,7 @@ export interface ContractConstants {
   NO_ADMIN: boolean;
   INIT_PLANET_HASHES: string[];
   CONFIG_HASH: string;
+  CONFIRM_START: boolean;
 }
 
 export type ClientMockchainData =
